@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var liveProcessingButton: Button
     lateinit var pairingButton: Button
     lateinit var recordButton: Button
-
+    lateinit var modelButton: Button
     // permissions
     lateinit var permissionAlertDialog: AlertDialog.Builder
 
@@ -45,10 +45,13 @@ class MainActivity : AppCompatActivity() {
 
     var isUserFirstTime = false
 
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
+        val REQUEST_RECORD_AUDIO = 1337
+        requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), REQUEST_RECORD_AUDIO)
         // check whether the onboarding screen should be shown
         val sharedPreferences = getSharedPreferences(Constants.PREFERENCES_FILE, Context.MODE_PRIVATE)
         if (sharedPreferences.contains(Constants.PREF_USER_FIRST_TIME)) {
@@ -64,6 +67,7 @@ class MainActivity : AppCompatActivity() {
         liveProcessingButton = findViewById(R.id.live_button)
         pairingButton = findViewById(R.id.ble_button)
         recordButton = findViewById(R.id.record_button)
+        modelButton = findViewById(R.id.ml_button)
 
         permissionAlertDialog = AlertDialog.Builder(this)
 
@@ -92,6 +96,10 @@ class MainActivity : AppCompatActivity() {
 
         recordButton.setOnClickListener {
             val intent = Intent(this, RecordingActivity::class.java)
+            startActivity(intent)
+        }
+        modelButton.setOnClickListener {
+            val intent = Intent(this, ModelActivity::class.java)
             startActivity(intent)
         }
     }
