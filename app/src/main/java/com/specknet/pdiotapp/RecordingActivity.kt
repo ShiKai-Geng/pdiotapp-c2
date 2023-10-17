@@ -84,6 +84,7 @@ class RecordingActivity : AppCompatActivity() {
 
         Log.d(TAG, "onCreate: setting up respeck receiver")
         // register respeck receiver
+        // TODO
         respeckReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
 
