@@ -93,7 +93,7 @@ class ModelActivity : AppCompatActivity() {
 //                        runOnUiThread { textView.text = "Predicted class: $maxIndex" }
                         runOnUiThread { textView.text = outputStr }
                         // If you have an array of labels corresponding to the classes,
-                        // you can display the corresponding label instead of the index.
+                        // you can display the corresponding label instead of the index.sj
                         // For example:
                         // val labels = arrayOf("Label1", "Label2", ... , "Label44")
                         // textView.text = "Predicted class: ${labels[maxIndex]}"
@@ -125,7 +125,7 @@ class MyTFLiteInference(context: Context) {
 
     // 加载模型文件
     private fun loadModelFile(context: Context): MappedByteBuffer {
-        val assetFileDescriptor = context.assets.openFd("t_c2_res_accel_1017.tflite") // 替换为你的模型文件名
+        val assetFileDescriptor = context.assets.openFd("c2_res_accel_1018.tflite") // 替换为你的模型文件名
         val inputStream = FileInputStream(assetFileDescriptor.fileDescriptor)
         val fileChannel = inputStream.channel
         val startOffset = assetFileDescriptor.startOffset
