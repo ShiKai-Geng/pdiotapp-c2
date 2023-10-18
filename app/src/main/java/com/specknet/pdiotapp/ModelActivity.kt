@@ -13,6 +13,12 @@ import android.os.Looper
 import android.util.Log
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.specknet.pdiotapp.utils.Constants
 import com.specknet.pdiotapp.utils.RESpeckLiveData
 import org.tensorflow.lite.task.audio.classifier.AudioClassifier
@@ -44,10 +50,19 @@ class ModelActivity : AppCompatActivity() {
 
     lateinit var textView: TextView
 
+    // Live Data Fields
+    lateinit var dataSet_res_accel_x: LineDataSet
+    lateinit var dataSet_res_accel_y: LineDataSet
+    lateinit var dataSet_res_accel_z: LineDataSet
+    lateinit var allRespeckData: LineData
+    lateinit var respeckChart: LineChart
+    var time = 0f
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_model)
         textView = findViewById<TextView>(R.id.output)
+        setupCharts()
 //        val outputStr = "fuck you";
 //                        runOnUiThread { textView.text = "Predicted class: $maxIndex" }
 //        runOnUiThread { textView.text = outputStr }
@@ -56,6 +71,7 @@ class ModelActivity : AppCompatActivity() {
         respeckReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 println("received")
+//
                 Log.i("yes", "received")
                 val action = intent.action
 
@@ -98,7 +114,11 @@ class ModelActivity : AppCompatActivity() {
                         // val labels = arrayOf("Label1", "Label2", ... , "Label44")
                         // textView.text = "Predicted class: ${labels[maxIndex]}"
 
+
                     }
+                    time += 1
+                    updateGraph("respeck", liveData.accelX, liveData.accelY, liveData.accelZ)
+
                 }
 
             }
@@ -110,7 +130,85 @@ class ModelActivity : AppCompatActivity() {
         val handlerRespeck = Handler(looperRespeck)
         this.registerReceiver(respeckReceiver, filterTestRespeck, null, handlerRespeck);
     }
-}
+    fun setupCharts() {
+        respeckChart = findViewById(R.id.respeck_chart)
+
+        // Respeck
+
+        time = 0f
+        val entries_res_accel_x = ArrayList<Entry>()
+        val entries_res_accel_y = ArrayList<Entry>()
+        val entries_res_accel_z = ArrayList<Entry>()
+
+        dataSet_res_accel_x = LineDataSet(entries_res_accel_x, "Accel X")
+        dataSet_res_accel_y = LineDataSet(entries_res_accel_y, "Accel Y")
+        dataSet_res_accel_z = LineDataSet(entries_res_accel_z, "Accel Z")
+
+        dataSet_res_accel_x.setDrawCircles(false)
+        dataSet_res_accel_y.setDrawCircles(false)
+        dataSet_res_accel_z.setDrawCircles(false)
+
+        dataSet_res_accel_x.setColor(
+            ContextCompat.getColor(
+                this,
+                R.color.red
+            )
+        )
+        dataSet_res_accel_y.setColor(
+            ContextCompat.getColor(
+                this,
+                R.color.green
+            )
+        )
+        dataSet_res_accel_z.setColor(
+            ContextCompat.getColor(
+                this,
+                R.color.blue
+            )
+        )
+
+        val dataSetsRes = ArrayList<ILineDataSet>()
+        dataSetsRes.add(dataSet_res_accel_x)
+        dataSetsRes.add(dataSet_res_accel_y)
+        dataSetsRes.add(dataSet_res_accel_z)
+
+        allRespeckData = LineData(dataSetsRes)
+        respeckChart.data = allRespeckData
+        respeckChart.invalidate()
+
+        // Thingy
+
+    }
+
+    fun updateGraph(graph: String, x: Float, y: Float, z: Float) {
+        // take the first element from the queue
+        // and update the graph with it
+        if (graph == "respeck") {
+            dataSet_res_accel_x.addEntry(Entry(time, x))
+            dataSet_res_accel_y.addEntry(Entry(time, y))
+            dataSet_res_accel_z.addEntry(Entry(time, z))
+
+            runOnUiThread {
+                allRespeckData.notifyDataChanged()
+                respeckChart.notifyDataSetChanged()
+                respeckChart.invalidate()
+                respeckChart.setVisibleXRangeMaximum(150f)
+                respeckChart.moveViewToX(respeckChart.lowestVisibleX + 40)
+            }
+        }
+        }
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(respeckReceiver)
+
+        looperRespeck.quit()
+
+    }
+
+
+    }
+
+
 
 
 
@@ -125,7 +223,7 @@ class MyTFLiteInference(context: Context) {
 
     // 加载模型文件
     private fun loadModelFile(context: Context): MappedByteBuffer {
-        val assetFileDescriptor = context.assets.openFd("c2_res_accel_1018.tflite") // 替换为你的模型文件名
+        val assetFileDescriptor = context.assets.openFd("t_c2_res_accel_1017.tflite") // 替换为你的模型文件名
         val inputStream = FileInputStream(assetFileDescriptor.fileDescriptor)
         val fileChannel = inputStream.channel
         val startOffset = assetFileDescriptor.startOffset
