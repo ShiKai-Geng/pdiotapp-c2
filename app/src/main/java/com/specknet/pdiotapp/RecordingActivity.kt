@@ -29,7 +29,6 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.lang.StringBuilder
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 class RecordingActivity : AppCompatActivity() {
@@ -86,6 +85,17 @@ class RecordingActivity : AppCompatActivity() {
     lateinit var respeckChart: LineChart
     var time = 0f
 
+    // activity mapping
+    lateinit var activityEncodings: Array<Array<String>>
+
+    // inference models
+    lateinit var tfLiteResAcc: MyTFLiteInference
+    // model paths
+//    var respeck_accel_model_path = "c2_res_accel_1104.tflite"
+    var respeck_accel_model_path = "t_c2_res_accel_1017.tflite"
+    lateinit var respeck_both_model_path: String
+    lateinit var respeck_thingy_accel_model_path: String
+
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -106,6 +116,20 @@ class RecordingActivity : AppCompatActivity() {
 
         setupInputs()
 
+        // read json file
+        val jsonFile = "activity_encodings.json"
+        val jsonStr = application.assets.open(jsonFile).bufferedReader().use { it.readText() }
+        val jsonObj = JSONObject(jsonStr)
+        val activityLabels = jsonObj.getJSONArray("activity_encodings")
+        // read list of list of strings as array of array of strings
+        activityEncodings = Array(activityLabels.length()) { Array(2) { "" } }
+        for (i in 0 until activityLabels.length()) {
+            val activityLabel = activityLabels.getJSONArray(i)
+            activityEncodings[i][0] = activityLabel.getString(0)
+            activityEncodings[i][1] = activityLabel.getString(1)
+        }
+        Log.d(TAG, "onCreate: activityEncodings = " + activityEncodings.contentDeepToString())
+
         Log.d(TAG, "onCreate: setting up respeck receiver")
         // register respeck receiver
         // TODO
@@ -115,6 +139,10 @@ class RecordingActivity : AppCompatActivity() {
                 val action = intent.action
 
                 if (action == Constants.ACTION_RESPECK_LIVE_BROADCAST) {
+                    // init model if not, on first receive
+                    if (!this@RecordingActivity::tfLiteResAcc.isInitialized) {
+                        tfLiteResAcc = MyTFLiteInference(context, modelFilePath = respeck_accel_model_path)  // initialize your inference class
+                    }
 
                     val liveData = intent.getSerializableExtra(Constants.RESPECK_LIVE_DATA) as RESpeckLiveData
                     Log.d("Live", "onReceive: liveData = " + liveData)
@@ -133,54 +161,16 @@ class RecordingActivity : AppCompatActivity() {
                         // Clear respeckPool
                         respeckPool.clear()
 
-                        val myTFLite =
-                            MyTFLiteInference(context)  // initialize your inference class
-
-                        val outputData =
-                            myTFLite.runInference(array2D)  // directly pass your 25x3 2D array
-                        // TODO: display max index
+                        val outputData = tfLiteResAcc.runInference(array2D)  // directly pass your 25x3 2D array
                         // Find the index of the maximum value in the outputData
                         val maxIndex = outputData.indices.maxByOrNull { outputData[it] } ?: -1
 
-                        // // Assuming you just want to display the index
-                        // val outputStr = "Predicted class: $maxIndex";
-                        // changing to read the encodings and use the index to display the activity string
-
-
-//                        val encodingsFilePath = "shikai: change this to path to activity_encodings.json"
-//                        val fileInString = applicationContext.assets.open(encodingsFilePath).bufferedReader().use { it.readText() }
-//                        val jsonArray = JSONObject(fileInString);
-//                        // read the list of [str, str] pairs into a list
-//                        // e.g. {"activity_encodings": [["ascending stairs", "normal"]]}, get "ascending stairs" and "normal"
-////                        val encodings = ArrayList<Pair<String, String>>()
-////                        for (i in 0 until jsonArray.length()) {
-////                            val obj = jsonArray.getJSONObject(i)
-////                            val activity_type = obj.getString(0)
-////                            val activity_subtype = obj.getString(1)
-////                            encodings.add(Pair(activity_type, activity_subtype))
-////                        }
-//                        val encodings = jsonArray.getJSONArray("activity_encodings")
-//
-//                        // Convert it to a List<List<String>>
-//                        val encodingsList: MutableList<List<String>> = mutableListOf()
-//
-//                        for (i in 0 until encodings.length()) {
-//                            val innerJsonArray = encodings.getJSONArray(i)
-//                            val innerList = mutableListOf<String>()
-//                            for (j in 0 until innerJsonArray.length()) {
-//                                innerList.add(innerJsonArray.getString(j))
-//                            }
-//                            encodingsList.add(innerList)
-//                        }
-
-                        val encodings : Array<Array<String>> = [["ascending stairs", "normal"], ["descending stairs", "normal"], ["lying down back", "talking"], ["lying down back", "hyperventilating"], ["lying down back", "singing"], ["lying down back", "normal"], ["lying down back", "coughing"], ["lying down back", "laughing"], ["lying down on left", "normal"], ["lying down on left", "singing"], ["lying down on left", "talking"], ["lying down on left", "coughing"], ["lying down on left", "laughing"], ["lying down on left", "hyperventilating"], ["lying down on stomach", "hyperventilating"], ["lying down on stomach", "normal"], ["lying down on stomach", "talking"], ["lying down on stomach", "coughing"], ["lying down on stomach", "laughing"], ["lying down on stomach", "singing"], ["lying down right", "singing"], ["lying down right", "hyperventilating"], ["lying down right", "laughing"], ["lying down right", "normal"], ["lying down right", "talking"], ["lying down right", "coughing"], ["miscellaneous movements", "normal"], ["normal walking", "normal"], ["running", "normal"], ["shuffle walking", "normal"], ["sitting", "singing"], ["sitting", "talking"], ["sitting", "eating"], ["sitting", "laughing"], ["sitting", "hyperventilating"], ["sitting", "coughing"], ["sitting", "normal"], ["standing", "talking"], ["standing", "eating"], ["standing", "hyperventilating"], ["standing", "laughing"], ["standing", "coughing"], ["standing", "normal"], ["standing", "singing"]]
-                        // get the activity type and subtype from the encodings
-                        val activity_type =encodings[maxIndex].first
-                        val activity_subtype =encodings[maxIndex].second
+                        // get activity type and subtype from maxIndex
+                        val activity_type = activityEncodings[maxIndex][0]
+                        val activity_subtype = activityEncodings[maxIndex][1]
                         // concat them as one string
                         val outputStr = "Predicted class: $activity_type - $activity_subtype";
                         runOnUiThread { textView.text = outputStr }
-
                     }
                     time += 1
                     updateGraph("respeck", liveData.accelX, liveData.accelY, liveData.accelZ)
@@ -201,7 +191,7 @@ class RecordingActivity : AppCompatActivity() {
         // register thingy receiver
         thingyReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
-
+                // TODO: modify logic here if we decide on respeck both or res+thingy accel
                 val action = intent.action
 
                 if (action == Constants.ACTION_THINGY_BROADCAST) {
@@ -236,6 +226,7 @@ class RecordingActivity : AppCompatActivity() {
                 timer.text = "Time elapsed: " + dateFormatted
             }
         }
+        Log.d(TAG, "onCreate: done")
 
     }
 
