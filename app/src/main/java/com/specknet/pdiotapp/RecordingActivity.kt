@@ -34,8 +34,8 @@ import org.json.JSONObject;
 class RecordingActivity : AppCompatActivity() {
     private val TAG = "RecordingActivity"
     lateinit var sensorTypeSpinner: Spinner
-    lateinit var activityTypeSpinner: Spinner
-    lateinit var activitySubtypeSpinner: Spinner
+//    lateinit var activityTypeSpinner: Spinner
+//    lateinit var activitySubtypeSpinner: Spinner
     lateinit var startRecordingButton: Button
     lateinit var cancelRecordingButton: Button
     lateinit var stopRecordingButton: Button
@@ -91,8 +91,8 @@ class RecordingActivity : AppCompatActivity() {
     // inference models
     lateinit var tfLiteResAcc: MyTFLiteInference
     // model paths
-//    var respeck_accel_model_path = "c2_res_accel_1104.tflite"
-    var respeck_accel_model_path = "t_c2_res_accel_1017.tflite"
+    var respeck_accel_model_path = "c2_res_accel_1104.tflite"
+    //var respeck_accel_model_path = "t_c2_res_accel_1017.tflite"
     lateinit var respeck_both_model_path: String
     lateinit var respeck_thingy_accel_model_path: String
 
@@ -439,8 +439,8 @@ class RecordingActivity : AppCompatActivity() {
             enableView(stopRecordingButton)
 
             disableView(sensorTypeSpinner)
-            disableView(activityTypeSpinner)
-            disableView(activitySubtypeSpinner)
+//            disableView(activityTypeSpinner)
+//            disableView(activitySubtypeSpinner)
             disableView(univSubjectIdInput)
             disableView(notesInput)
 
@@ -455,8 +455,8 @@ class RecordingActivity : AppCompatActivity() {
             disableView(stopRecordingButton)
 
             enableView(sensorTypeSpinner)
-            enableView(activityTypeSpinner)
-            enableView(activitySubtypeSpinner)
+//            enableView(activityTypeSpinner)
+//            enableView(activitySubtypeSpinner)
             enableView(univSubjectIdInput)
             enableView(notesInput)
 
@@ -472,8 +472,8 @@ class RecordingActivity : AppCompatActivity() {
             disableView(stopRecordingButton)
 
             enableView(sensorTypeSpinner)
-            enableView(activityTypeSpinner)
-            enableView(activitySubtypeSpinner)
+//            enableView(activityTypeSpinner)
+//            enableView(activitySubtypeSpinner)
             enableView(univSubjectIdInput)
             enableView(notesInput)
 
@@ -611,8 +611,8 @@ class RecordingActivity : AppCompatActivity() {
     private fun getInputs() {
 
         universalSubjectId = univSubjectIdInput.text.toString().toLowerCase().trim()
-        activityType = activityTypeSpinner.selectedItem.toString()
-        activitySubtype = activitySubtypeSpinner.selectedItem.toString()
+//        activityType = activityTypeSpinner.selectedItem.toString()
+//        activitySubtype = activitySubtypeSpinner.selectedItem.toString()
         sensorType = sensorTypeSpinner.selectedItem.toString()
         notes = notesInput.text.toString().trim()
 
