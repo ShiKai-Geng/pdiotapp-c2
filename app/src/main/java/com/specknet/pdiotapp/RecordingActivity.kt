@@ -29,6 +29,9 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.lang.StringBuilder
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 class RecordingActivity : AppCompatActivity() {
     private val TAG = "RecordingActivity"
     lateinit var sensorTypeSpinner: Spinner
@@ -121,8 +124,6 @@ class RecordingActivity : AppCompatActivity() {
                     respeckOn = true
                     val accelData = floatArrayOf(liveData.accelX, liveData.accelY, liveData.accelZ)
                     respeckPool.add(accelData);
-//                    val tempStr = respeckPool.size.toString();
-//                    runOnUiThread { textView.text = tempStr }
                     if (respeckPool.size >= 25) {
                         // Convert ArrayList<FloatArray> to 25x3 float array
                         val array2D = Array(25) { FloatArray(3) }
@@ -141,10 +142,45 @@ class RecordingActivity : AppCompatActivity() {
                         // Find the index of the maximum value in the outputData
                         val maxIndex = outputData.indices.maxByOrNull { outputData[it] } ?: -1
 
-                        // Assuming you just want to display the index
-                        val outputStr = "Predicted class: $maxIndex";
-//                        runOnUiThread { textView.text = "Predicted class: $maxIndex" }
+                        // // Assuming you just want to display the index
+                        // val outputStr = "Predicted class: $maxIndex";
+                        // changing to read the encodings and use the index to display the activity string
+
+
+//                        val encodingsFilePath = "shikai: change this to path to activity_encodings.json"
+//                        val fileInString = applicationContext.assets.open(encodingsFilePath).bufferedReader().use { it.readText() }
+//                        val jsonArray = JSONObject(fileInString);
+//                        // read the list of [str, str] pairs into a list
+//                        // e.g. {"activity_encodings": [["ascending stairs", "normal"]]}, get "ascending stairs" and "normal"
+////                        val encodings = ArrayList<Pair<String, String>>()
+////                        for (i in 0 until jsonArray.length()) {
+////                            val obj = jsonArray.getJSONObject(i)
+////                            val activity_type = obj.getString(0)
+////                            val activity_subtype = obj.getString(1)
+////                            encodings.add(Pair(activity_type, activity_subtype))
+////                        }
+//                        val encodings = jsonArray.getJSONArray("activity_encodings")
+//
+//                        // Convert it to a List<List<String>>
+//                        val encodingsList: MutableList<List<String>> = mutableListOf()
+//
+//                        for (i in 0 until encodings.length()) {
+//                            val innerJsonArray = encodings.getJSONArray(i)
+//                            val innerList = mutableListOf<String>()
+//                            for (j in 0 until innerJsonArray.length()) {
+//                                innerList.add(innerJsonArray.getString(j))
+//                            }
+//                            encodingsList.add(innerList)
+//                        }
+
+                        val encodings : Array<Array<String>> = [["ascending stairs", "normal"], ["descending stairs", "normal"], ["lying down back", "talking"], ["lying down back", "hyperventilating"], ["lying down back", "singing"], ["lying down back", "normal"], ["lying down back", "coughing"], ["lying down back", "laughing"], ["lying down on left", "normal"], ["lying down on left", "singing"], ["lying down on left", "talking"], ["lying down on left", "coughing"], ["lying down on left", "laughing"], ["lying down on left", "hyperventilating"], ["lying down on stomach", "hyperventilating"], ["lying down on stomach", "normal"], ["lying down on stomach", "talking"], ["lying down on stomach", "coughing"], ["lying down on stomach", "laughing"], ["lying down on stomach", "singing"], ["lying down right", "singing"], ["lying down right", "hyperventilating"], ["lying down right", "laughing"], ["lying down right", "normal"], ["lying down right", "talking"], ["lying down right", "coughing"], ["miscellaneous movements", "normal"], ["normal walking", "normal"], ["running", "normal"], ["shuffle walking", "normal"], ["sitting", "singing"], ["sitting", "talking"], ["sitting", "eating"], ["sitting", "laughing"], ["sitting", "hyperventilating"], ["sitting", "coughing"], ["sitting", "normal"], ["standing", "talking"], ["standing", "eating"], ["standing", "hyperventilating"], ["standing", "laughing"], ["standing", "coughing"], ["standing", "normal"], ["standing", "singing"]]
+                        // get the activity type and subtype from the encodings
+                        val activity_type =encodings[maxIndex].first
+                        val activity_subtype =encodings[maxIndex].second
+                        // concat them as one string
+                        val outputStr = "Predicted class: $activity_type - $activity_subtype";
                         runOnUiThread { textView.text = outputStr }
+
                     }
                     time += 1
                     updateGraph("respeck", liveData.accelX, liveData.accelY, liveData.accelZ)
