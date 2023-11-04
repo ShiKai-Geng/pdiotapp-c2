@@ -1,5 +1,6 @@
 package com.specknet.pdiotapp
 
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -71,6 +72,9 @@ class RecordingActivity : AppCompatActivity() {
     var thingyOn = false
     var respeckOn = false
 
+    var respeckPool = ArrayList<FloatArray>();
+    lateinit var textView: TextView
+
     // Live Data Fields
     lateinit var dataSet_res_accel_x: LineDataSet
     lateinit var dataSet_res_accel_y: LineDataSet
@@ -80,6 +84,7 @@ class RecordingActivity : AppCompatActivity() {
     var time = 0f
 
 
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate: here")
         super.onCreate(savedInstanceState)
@@ -87,6 +92,7 @@ class RecordingActivity : AppCompatActivity() {
 
         respeckOutputData = StringBuilder()
         thingyOutputData = StringBuilder()
+        textView = findViewById<TextView>(R.id.output)
 
 //        setupViews()
 
@@ -113,6 +119,33 @@ class RecordingActivity : AppCompatActivity() {
                     updateRespeckData(liveData)
 
                     respeckOn = true
+                    val accelData = floatArrayOf(liveData.accelX, liveData.accelY, liveData.accelZ)
+                    respeckPool.add(accelData);
+//                    val tempStr = respeckPool.size.toString();
+//                    runOnUiThread { textView.text = tempStr }
+                    if (respeckPool.size >= 25) {
+                        // Convert ArrayList<FloatArray> to 25x3 float array
+                        val array2D = Array(25) { FloatArray(3) }
+                        for (i in 0..24) {
+                            array2D[i] = respeckPool[i]
+                        }
+                        // Clear respeckPool
+                        respeckPool.clear()
+
+                        val myTFLite =
+                            MyTFLiteInference(context)  // initialize your inference class
+
+                        val outputData =
+                            myTFLite.runInference(array2D)  // directly pass your 25x3 2D array
+                        // TODO: display max index
+                        // Find the index of the maximum value in the outputData
+                        val maxIndex = outputData.indices.maxByOrNull { outputData[it] } ?: -1
+
+                        // Assuming you just want to display the index
+                        val outputStr = "Predicted class: $maxIndex";
+//                        runOnUiThread { textView.text = "Predicted class: $maxIndex" }
+                        runOnUiThread { textView.text = outputStr }
+                    }
                     time += 1
                     updateGraph("respeck", liveData.accelX, liveData.accelY, liveData.accelZ)
 
@@ -246,25 +279,25 @@ class RecordingActivity : AppCompatActivity() {
             }
         }
 
-        activityTypeSpinner = findViewById(R.id.activity_type_spinner)
-        ArrayAdapter.createFromResource(
-            this,
-            R.array.activity_type_array,
-            android.R.layout.simple_spinner_item
-        ).also { adapter ->
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            activityTypeSpinner.adapter = adapter
-        }
-
-        activitySubtypeSpinner = findViewById(R.id.activity_subtype_spinner)
-        ArrayAdapter.createFromResource(
-            this,
-            R.array.activity_subtype_array,
-            android.R.layout.simple_spinner_item
-        ).also { adapter ->
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            activitySubtypeSpinner.adapter = adapter
-        }
+//        activityTypeSpinner = findViewById(R.id.activity_type_spinner)
+//        ArrayAdapter.createFromResource(
+//            this,
+//            R.array.activity_type_array,
+//            android.R.layout.simple_spinner_item
+//        ).also { adapter ->
+//            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+//            activityTypeSpinner.adapter = adapter
+//        }
+//
+//        activitySubtypeSpinner = findViewById(R.id.activity_subtype_spinner)
+//        ArrayAdapter.createFromResource(
+//            this,
+//            R.array.activity_subtype_array,
+//            android.R.layout.simple_spinner_item
+//        ).also { adapter ->
+//            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+//            activitySubtypeSpinner.adapter = adapter
+//        }
     }
     fun setupCharts() {
         respeckChart = findViewById(R.id.respeck_chart)
@@ -448,6 +481,7 @@ class RecordingActivity : AppCompatActivity() {
             mIsRespeckRecording = true
             mIsThingyRecording = false
         }
+
     }
 
     private fun stopRecording() {
