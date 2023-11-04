@@ -1,1 +1,180 @@
-{"activity_encodings": [["ascending stairs", "normal"], ["descending stairs", "normal"], ["lying down back", "talking"], ["lying down back", "hyperventilating"], ["lying down back", "singing"], ["lying down back", "normal"], ["lying down back", "coughing"], ["lying down back", "laughing"], ["lying down on left", "normal"], ["lying down on left", "singing"], ["lying down on left", "talking"], ["lying down on left", "coughing"], ["lying down on left", "laughing"], ["lying down on left", "hyperventilating"], ["lying down on stomach", "hyperventilating"], ["lying down on stomach", "normal"], ["lying down on stomach", "talking"], ["lying down on stomach", "coughing"], ["lying down on stomach", "laughing"], ["lying down on stomach", "singing"], ["lying down right", "singing"], ["lying down right", "hyperventilating"], ["lying down right", "laughing"], ["lying down right", "normal"], ["lying down right", "talking"], ["lying down right", "coughing"], ["miscellaneous movements", "normal"], ["normal walking", "normal"], ["running", "normal"], ["shuffle walking", "normal"], ["sitting", "singing"], ["sitting", "talking"], ["sitting", "eating"], ["sitting", "laughing"], ["sitting", "hyperventilating"], ["sitting", "coughing"], ["sitting", "normal"], ["standing", "talking"], ["standing", "eating"], ["standing", "hyperventilating"], ["standing", "laughing"], ["standing", "coughing"], ["standing", "normal"], ["standing", "singing"]]}
+{
+  "activity_encodings": [
+    [
+      "ascending stairs",
+      "normal"
+    ],
+    [
+      "descending stairs",
+      "normal"
+    ],
+    [
+      "lying down back",
+      "talking"
+    ],
+    [
+      "lying down back",
+      "hyperventilating"
+    ],
+    [
+      "lying down back",
+      "singing"
+    ],
+    [
+      "lying down back",
+      "normal"
+    ],
+    [
+      "lying down back",
+      "coughing"
+    ],
+    [
+      "lying down back",
+      "laughing"
+    ],
+    [
+      "lying down on left",
+      "normal"
+    ],
+    [
+      "lying down on left",
+      "singing"
+    ],
+    [
+      "lying down on left",
+      "talking"
+    ],
+    [
+      "lying down on left",
+      "coughing"
+    ],
+    [
+      "lying down on left",
+      "laughing"
+    ],
+    [
+      "lying down on left",
+      "hyperventilating"
+    ],
+    [
+      "lying down on stomach",
+      "hyperventilating"
+    ],
+    [
+      "lying down on stomach",
+      "normal"
+    ],
+    [
+      "lying down on stomach",
+      "talking"
+    ],
+    [
+      "lying down on stomach",
+      "coughing"
+    ],
+    [
+      "lying down on stomach",
+      "laughing"
+    ],
+    [
+      "lying down on stomach",
+      "singing"
+    ],
+    [
+      "lying down right",
+      "singing"
+    ],
+    [
+      "lying down right",
+      "hyperventilating"
+    ],
+    [
+      "lying down right",
+      "laughing"
+    ],
+    [
+      "lying down right",
+      "normal"
+    ],
+    [
+      "lying down right",
+      "talking"
+    ],
+    [
+      "lying down right",
+      "coughing"
+    ],
+    [
+      "miscellaneous movements",
+      "normal"
+    ],
+    [
+      "normal walking",
+      "normal"
+    ],
+    [
+      "running",
+      "normal"
+    ],
+    [
+      "shuffle walking",
+      "normal"
+    ],
+    [
+      "sitting",
+      "singing"
+    ],
+    [
+      "sitting",
+      "talking"
+    ],
+    [
+      "sitting",
+      "eating"
+    ],
+    [
+      "sitting",
+      "laughing"
+    ],
+    [
+      "sitting",
+      "hyperventilating"
+    ],
+    [
+      "sitting",
+      "coughing"
+    ],
+    [
+      "sitting",
+      "normal"
+    ],
+    [
+      "standing",
+      "talking"
+    ],
+    [
+      "standing",
+      "eating"
+    ],
+    [
+      "standing",
+      "hyperventilating"
+    ],
+    [
+      "standing",
+      "laughing"
+    ],
+    [
+      "standing",
+      "coughing"
+    ],
+    [
+      "standing",
+      "normal"
+    ],
+    [
+      "standing",
+      "singing"
+    ]
+  ]
+}

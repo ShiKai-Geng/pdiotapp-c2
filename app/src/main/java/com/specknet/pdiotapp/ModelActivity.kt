@@ -213,18 +213,18 @@ class ModelActivity : AppCompatActivity() {
 
 
 
-class MyTFLiteInference(context: Context) {
+class MyTFLiteInference(context: Context, modelFilePath: String = "t_c2_res_accel_1017.tflite") {
 
     private var interpreter: Interpreter
 
     init {
         // 初始化 TensorFlow Lite 解释器
-        interpreter = Interpreter(loadModelFile(context))
+        interpreter = Interpreter(loadModelFile(context, modelFilePath))
     }
 
     // 加载模型文件
-    private fun loadModelFile(context: Context): MappedByteBuffer {
-        val assetFileDescriptor = context.assets.openFd("t_c2_res_accel_1017.tflite") // 替换为你的模型文件名
+    private fun loadModelFile(context: Context, modelFilePath: String): MappedByteBuffer {
+        val assetFileDescriptor = context.assets.openFd(modelFilePath) // 替换为你的模型文件名
         val inputStream = FileInputStream(assetFileDescriptor.fileDescriptor)
         val fileChannel = inputStream.channel
         val startOffset = assetFileDescriptor.startOffset
