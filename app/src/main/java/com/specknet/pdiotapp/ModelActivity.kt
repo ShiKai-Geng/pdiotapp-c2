@@ -59,6 +59,7 @@ class ModelActivity : AppCompatActivity() {
     var time = 0f
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        //
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_model)
         textView = findViewById<TextView>(R.id.output)

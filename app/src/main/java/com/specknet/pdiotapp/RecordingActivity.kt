@@ -12,6 +12,12 @@ import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.specknet.pdiotapp.utils.Constants
 import com.specknet.pdiotapp.utils.CountUpTimer
 import com.specknet.pdiotapp.utils.RESpeckLiveData
@@ -65,6 +71,14 @@ class RecordingActivity : AppCompatActivity() {
     var thingyOn = false
     var respeckOn = false
 
+    // Live Data Fields
+    lateinit var dataSet_res_accel_x: LineDataSet
+    lateinit var dataSet_res_accel_y: LineDataSet
+    lateinit var dataSet_res_accel_z: LineDataSet
+    lateinit var allRespeckData: LineData
+    lateinit var respeckChart: LineChart
+    var time = 0f
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate: here")
@@ -74,11 +88,12 @@ class RecordingActivity : AppCompatActivity() {
         respeckOutputData = StringBuilder()
         thingyOutputData = StringBuilder()
 
-        setupViews()
+//        setupViews()
 
         setupSpinners()
 
         setupButtons()
+        setupCharts()
 
         setupInputs()
 
@@ -98,6 +113,8 @@ class RecordingActivity : AppCompatActivity() {
                     updateRespeckData(liveData)
 
                     respeckOn = true
+                    time += 1
+                    updateGraph("respeck", liveData.accelX, liveData.accelY, liveData.accelZ)
 
                 }
 
@@ -153,14 +170,14 @@ class RecordingActivity : AppCompatActivity() {
 
     }
 
-    private fun setupViews() {
-        respeckAccel = findViewById(R.id.respeck_accel)
-        respeckGyro = findViewById(R.id.respeck_gyro)
-
-        thingyAccel = findViewById(R.id.thingy_accel)
-        thingyGyro = findViewById(R.id.thingy_gyro)
-        thingyMag = findViewById(R.id.thingy_mag)
-    }
+//    private fun setupViews() {
+//        respeckAccel = findViewById(R.id.respeck_accel)
+//        respeckGyro = findViewById(R.id.respeck_gyro)
+//
+//        thingyAccel = findViewById(R.id.thingy_accel)
+//        thingyGyro = findViewById(R.id.thingy_gyro)
+//        thingyMag = findViewById(R.id.thingy_mag)
+//    }
 
     private fun updateRespeckData(liveData: RESpeckLiveData) {
         if (mIsRespeckRecording) {
@@ -249,7 +266,73 @@ class RecordingActivity : AppCompatActivity() {
             activitySubtypeSpinner.adapter = adapter
         }
     }
+    fun setupCharts() {
+        respeckChart = findViewById(R.id.respeck_chart)
 
+        // Respeck
+
+        time = 0f
+        val entries_res_accel_x = ArrayList<Entry>()
+        val entries_res_accel_y = ArrayList<Entry>()
+        val entries_res_accel_z = ArrayList<Entry>()
+
+        dataSet_res_accel_x = LineDataSet(entries_res_accel_x, "Accel X")
+        dataSet_res_accel_y = LineDataSet(entries_res_accel_y, "Accel Y")
+        dataSet_res_accel_z = LineDataSet(entries_res_accel_z, "Accel Z")
+
+        dataSet_res_accel_x.setDrawCircles(false)
+        dataSet_res_accel_y.setDrawCircles(false)
+        dataSet_res_accel_z.setDrawCircles(false)
+
+        dataSet_res_accel_x.setColor(
+            ContextCompat.getColor(
+                this,
+                R.color.red
+            )
+        )
+        dataSet_res_accel_y.setColor(
+            ContextCompat.getColor(
+                this,
+                R.color.green
+            )
+        )
+        dataSet_res_accel_z.setColor(
+            ContextCompat.getColor(
+                this,
+                R.color.blue
+            )
+        )
+
+        val dataSetsRes = ArrayList<ILineDataSet>()
+        dataSetsRes.add(dataSet_res_accel_x)
+        dataSetsRes.add(dataSet_res_accel_y)
+        dataSetsRes.add(dataSet_res_accel_z)
+
+        allRespeckData = LineData(dataSetsRes)
+        respeckChart.data = allRespeckData
+        respeckChart.invalidate()
+
+        // Thingy
+
+    }
+
+    fun updateGraph(graph: String, x: Float, y: Float, z: Float) {
+        // take the first element from the queue
+        // and update the graph with it
+        if (graph == "respeck") {
+            dataSet_res_accel_x.addEntry(Entry(time, x))
+            dataSet_res_accel_y.addEntry(Entry(time, y))
+            dataSet_res_accel_z.addEntry(Entry(time, z))
+
+            runOnUiThread {
+                allRespeckData.notifyDataChanged()
+                respeckChart.notifyDataSetChanged()
+                respeckChart.invalidate()
+                respeckChart.setVisibleXRangeMaximum(150f)
+                respeckChart.moveViewToX(respeckChart.lowestVisibleX + 40)
+            }
+        }
+    }
     private fun enableView(view: View) {
         view.isClickable = true
         view.isEnabled = true
