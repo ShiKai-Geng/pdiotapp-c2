@@ -64,12 +64,12 @@ class RecordingActivity : AppCompatActivity() {
     private lateinit var respeckOutputData: StringBuilder
     private lateinit var thingyOutputData: StringBuilder
 
-    private lateinit var respeckAccel: TextView
-    private lateinit var respeckGyro: TextView
+//    private lateinit var respeckAccel: TextView
+//    private lateinit var respeckGyro: TextView
 
-    private lateinit var thingyAccel: TextView
-    private lateinit var thingyGyro: TextView
-    private lateinit var thingyMag: TextView
+//    private lateinit var thingyAccel: TextView
+//    private lateinit var thingyGyro: TextView
+//    private lateinit var thingyMag: TextView
 
     var thingyOn = false
     var respeckOn = false
@@ -251,10 +251,10 @@ class RecordingActivity : AppCompatActivity() {
         }
 
         // update UI thread
-        runOnUiThread {
-            respeckAccel.text = getString(R.string.respeck_accel, liveData.accelX, liveData.accelY, liveData.accelZ)
-            respeckGyro.text = getString(R.string.respeck_gyro, liveData.gyro.x, liveData.gyro.y, liveData.gyro.z)
-        }
+//        runOnUiThread {
+//            respeckAccel.text = getString(R.string.respeck_accel, liveData.accelX, liveData.accelY, liveData.accelZ)
+//            respeckGyro.text = getString(R.string.respeck_gyro, liveData.gyro.x, liveData.gyro.y, liveData.gyro.z)
+//        }
     }
 
     private fun updateThingyData(liveData: ThingyLiveData) {
@@ -268,12 +268,12 @@ class RecordingActivity : AppCompatActivity() {
             Log.d(TAG, "updateThingyData: appended to thingyOutputData = " + output)
         }
 
-        // update UI thread
-        runOnUiThread {
-            thingyAccel.text = getString(R.string.thingy_accel, liveData.accelX, liveData.accelY, liveData.accelZ)
-            thingyGyro.text = getString(R.string.thingy_gyro, liveData.gyro.x, liveData.gyro.y, liveData.gyro.z)
-            thingyMag.text = getString(R.string.thingy_mag, liveData.mag.x, liveData.mag.y, liveData.mag.z)
-        }
+//        // update UI thread
+//        runOnUiThread {
+//            thingyAccel.text = getString(R.string.thingy_accel, liveData.accelX, liveData.accelY, liveData.accelZ)
+//            thingyGyro.text = getString(R.string.thingy_gyro, liveData.gyro.x, liveData.gyro.y, liveData.gyro.z)
+//            thingyMag.text = getString(R.string.thingy_mag, liveData.mag.x, liveData.mag.y, liveData.mag.z)
+//        }
     }
 
     private fun setupInputs() {
@@ -439,8 +439,8 @@ class RecordingActivity : AppCompatActivity() {
             enableView(stopRecordingButton)
 
             disableView(sensorTypeSpinner)
-            disableView(activityTypeSpinner)
-            disableView(activitySubtypeSpinner)
+//            disableView(activityTypeSpinner)
+//            disableView(activitySubtypeSpinner)
             disableView(univSubjectIdInput)
             disableView(notesInput)
 
@@ -455,8 +455,8 @@ class RecordingActivity : AppCompatActivity() {
             disableView(stopRecordingButton)
 
             enableView(sensorTypeSpinner)
-            enableView(activityTypeSpinner)
-            enableView(activitySubtypeSpinner)
+//            enableView(activityTypeSpinner)
+//            enableView(activitySubtypeSpinner)
             enableView(univSubjectIdInput)
             enableView(notesInput)
 
@@ -472,8 +472,8 @@ class RecordingActivity : AppCompatActivity() {
             disableView(stopRecordingButton)
 
             enableView(sensorTypeSpinner)
-            enableView(activityTypeSpinner)
-            enableView(activitySubtypeSpinner)
+//            enableView(activityTypeSpinner)
+//            enableView(activitySubtypeSpinner)
             enableView(univSubjectIdInput)
             enableView(notesInput)
 
@@ -611,8 +611,8 @@ class RecordingActivity : AppCompatActivity() {
     private fun getInputs() {
 
         universalSubjectId = univSubjectIdInput.text.toString().toLowerCase().trim()
-        activityType = activityTypeSpinner.selectedItem.toString()
-        activitySubtype = activitySubtypeSpinner.selectedItem.toString()
+        activityType = "activity"
+        activitySubtype = "activity_subtype"
         sensorType = sensorTypeSpinner.selectedItem.toString()
         notes = notesInput.text.toString().trim()
 

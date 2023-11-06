@@ -213,7 +213,7 @@ class ModelActivity : AppCompatActivity() {
 
 
 
-class MyTFLiteInference(context: Context, modelFilePath: String = "t_c2_res_accel_1017.tflite") {
+class MyTFLiteInference(context: Context, modelFilePath: String = "c2_res_accel_1104.tflite") {
 
     private var interpreter: Interpreter
 
