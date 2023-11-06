@@ -91,8 +91,8 @@ class RecordingActivity : AppCompatActivity() {
     // inference models
     lateinit var tfLiteResAcc: MyTFLiteInference
     // model paths
-//    var respeck_accel_model_path = "c2_res_accel_1104.tflite"
-    var respeck_accel_model_path = "t_c2_res_accel_1017.tflite"
+    var respeck_accel_model_path = "c2_res_accel_1106.tflite"
+//    var respeck_accel_model_path = "t_c2_res_accel_1017.tflite"
     lateinit var respeck_both_model_path: String
     lateinit var respeck_thingy_accel_model_path: String
     var activity_type = "-"
@@ -100,6 +100,7 @@ class RecordingActivity : AppCompatActivity() {
     var maxIndex =  1
 
 
+    private val window_size = 50
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -156,15 +157,15 @@ class RecordingActivity : AppCompatActivity() {
                     respeckOn = true
                     val accelData = floatArrayOf(liveData.accelX, liveData.accelY, liveData.accelZ)
                     respeckPool.add(accelData);
-                    if (respeckPool.size >= 25) {
+                    if (respeckPool.size >= window_size) {
                         // Convert ArrayList<FloatArray> to 25x3 float array
-                        val array2D = Array(25) { FloatArray(3) }
-                        for (i in 0..24) {
+                        val array2D = Array(window_size) { FloatArray(3) }
+                        for (i in 0 until window_size) {
                             array2D[i] = respeckPool[i]
                         }
                         // Clear respeckPool
                         respeckPool.clear()
-
+                        Log.d(TAG, "onReceive: array2D = " + array2D.contentDeepToString())
                         val outputData = tfLiteResAcc.runInference(array2D)  // directly pass your 25x3 2D array
                         // Find the index of the maximum value in the outputData
                         maxIndex = outputData.indices.maxByOrNull { outputData[it] } ?: -1

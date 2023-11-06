@@ -234,7 +234,7 @@ class MyTFLiteInference(context: Context, modelFilePath: String = "c2_res_accel_
 
     // 执行推理
     fun runInference(inputData: Array<FloatArray>): FloatArray {
-        val inputBuffer = ByteBuffer.allocateDirect(4 * 25 * 3)
+        val inputBuffer = ByteBuffer.allocateDirect(4 * 50 * 3)
         inputBuffer.order(ByteOrder.nativeOrder())
 
         // Converting 2D array data into ByteBuffer format
