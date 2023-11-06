@@ -29,7 +29,7 @@ public class Constants {
 
     public static final int REQUEST_CODE_PERMISSIONS = 4;
 
-    public static final String RECORDING_CSV_HEADER_RESPECK = "timestamp,accel_x,accel_y,accel_z,gyro_x,gyro_y,gyro_z";
+    public static final String RECORDING_CSV_HEADER_RESPECK = "timestamp,accel_x,accel_y,accel_z,gyro_x,gyro_y,gyro_z,activity_type,activity_subtype,Index";
     public static final String RECORDING_CSV_HEADER_THINGY = "timestamp,accel_x,accel_y,accel_z,gyro_x,gyro_y,gyro_z,mag_x,mag_y,mag_z";
 
     public static final String PREF_USER_FIRST_TIME = "user_first_time";

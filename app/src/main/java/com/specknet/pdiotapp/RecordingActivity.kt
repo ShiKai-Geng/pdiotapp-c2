@@ -95,6 +95,10 @@ class RecordingActivity : AppCompatActivity() {
     var respeck_accel_model_path = "t_c2_res_accel_1017.tflite"
     lateinit var respeck_both_model_path: String
     lateinit var respeck_thingy_accel_model_path: String
+    var activity_type = "-"
+    var activity_subtype ="-"
+    var maxIndex =  1
+
 
 
     @SuppressLint("MissingInflatedId")
@@ -163,11 +167,11 @@ class RecordingActivity : AppCompatActivity() {
 
                         val outputData = tfLiteResAcc.runInference(array2D)  // directly pass your 25x3 2D array
                         // Find the index of the maximum value in the outputData
-                        val maxIndex = outputData.indices.maxByOrNull { outputData[it] } ?: -1
+                        maxIndex = outputData.indices.maxByOrNull { outputData[it] } ?: -1
 
                         // get activity type and subtype from maxIndex
-                        val activity_type = activityEncodings[maxIndex][0]
-                        val activity_subtype = activityEncodings[maxIndex][1]
+                        activity_type = activityEncodings[maxIndex][0]
+                        activity_subtype = activityEncodings[maxIndex][1]
                         // concat them as one string
                         val outputStr = "Predicted class: $activity_type - $activity_subtype";
                         runOnUiThread { textView.text = outputStr }
@@ -243,7 +247,7 @@ class RecordingActivity : AppCompatActivity() {
         if (mIsRespeckRecording) {
             val output = liveData.phoneTimestamp.toString() + "," +
                     liveData.accelX + "," + liveData.accelY + "," + liveData.accelZ + "," +
-                    liveData.gyro.x + "," + liveData.gyro.y + "," + liveData.gyro.z + "\n"
+                    liveData.gyro.x + "," + liveData.gyro.y + "," + liveData.gyro.z + "," + activity_type + "," + activity_subtype + "," + maxIndex + "\n"
 
             respeckOutputData.append(output)
             Log.d(TAG, "updateRespeckData: appended to respeckoutputdata = " + output)
