@@ -220,6 +220,7 @@ class MyTFLiteInference(context: Context, modelFilePath: String = "c2_res_accel_
     init {
         // 初始化 TensorFlow Lite 解释器
         interpreter = Interpreter(loadModelFile(context, modelFilePath))
+//        print("model init")
     }
 
     // 加载模型文件
@@ -234,6 +235,7 @@ class MyTFLiteInference(context: Context, modelFilePath: String = "c2_res_accel_
 
     // 执行推理
     fun runInference(inputData: Array<FloatArray>): FloatArray {
+//        print("inference")
         val inputBuffer = ByteBuffer.allocateDirect(4 * 25 * 3)
         inputBuffer.order(ByteOrder.nativeOrder())
 
@@ -251,7 +253,10 @@ class MyTFLiteInference(context: Context, modelFilePath: String = "c2_res_accel_
         val outputData = FloatArray(37)
         outputBuffer.rewind()
         outputBuffer.asFloatBuffer().get(outputData)
-
+//        print("outputdata")
+//        print(outputData);
+        val datastring = outputData.joinToString(separator = ",")
+        Log.d("output", datastring)
         return outputData
     }
 

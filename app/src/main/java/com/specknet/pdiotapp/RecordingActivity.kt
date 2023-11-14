@@ -30,12 +30,14 @@ import java.util.*
 import java.lang.StringBuilder
 
 import org.json.JSONObject;
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 class RecordingActivity : AppCompatActivity() {
     private val TAG = "RecordingActivity"
     lateinit var sensorTypeSpinner: Spinner
-    lateinit var activityTypeSpinner: Spinner
-    lateinit var activitySubtypeSpinner: Spinner
+//    lateinit var activityTypeSpinner: Spinner
+//    lateinit var activitySubtypeSpinner: Spinner
     lateinit var startRecordingButton: Button
     lateinit var cancelRecordingButton: Button
     lateinit var stopRecordingButton: Button
@@ -91,7 +93,7 @@ class RecordingActivity : AppCompatActivity() {
     // inference models
     lateinit var tfLiteResAcc: MyTFLiteInference
     // model paths
-    var respeck_accel_model_path = "c2_res_accel_1113_s_37_bn.tflite"
+    var respeck_accel_model_path = "c2_res_accel_1114_s_37_bn.tflite"
 //    var respeck_accel_model_path = "t_c2_res_accel_1017.tflite"
     lateinit var respeck_both_model_path: String
     lateinit var respeck_thingy_accel_model_path: String
@@ -146,7 +148,10 @@ class RecordingActivity : AppCompatActivity() {
                 if (action == Constants.ACTION_RESPECK_LIVE_BROADCAST) {
                     // init model if not, on first receive
                     if (!this@RecordingActivity::tfLiteResAcc.isInitialized) {
+//                        print("initializing model")
                         tfLiteResAcc = MyTFLiteInference(context, modelFilePath = respeck_accel_model_path)  // initialize your inference class
+                    } else {
+//                        print("model already initialized")
                     }
 
                     val liveData = intent.getSerializableExtra(Constants.RESPECK_LIVE_DATA) as RESpeckLiveData
@@ -158,15 +163,28 @@ class RecordingActivity : AppCompatActivity() {
                     val accelData = floatArrayOf(liveData.accelX, liveData.accelY, liveData.accelZ)
                     respeckPool.add(accelData);
                     if (respeckPool.size >= window_size) {
+                        // get mean and std of xyz
+                        val resX = respeckPool.map { it[0] }
+                        val resY = respeckPool.map { it[1] }
+                        val resZ = respeckPool.map { it[2] }
+                        val meanX = resX.average()
+                        val stdX = getStd(resX, meanX)
+                        val meanY = resY.average()
+                        val stdY = getStd(resY, meanY)
+                        val meanZ = resZ.average()
+                        val stdZ = getStd(resZ, meanZ)
                         // Convert ArrayList<FloatArray> to 25x3 float array
                         val array2D = Array(window_size) { FloatArray(3) }
                         for (i in 0 until window_size) {
-                            array2D[i] = respeckPool[i]  // TODO： add normalization to center it
+                            array2D[i][0] = ((respeckPool[i][0] - meanX) / stdX).toFloat()
+                            array2D[i][1] = ((respeckPool[i][1] - meanY) / stdY).toFloat()
+                            array2D[i][2] = ((respeckPool[i][2] - meanZ) / stdZ).toFloat()
                         }
                         // Clear respeckPool
                         respeckPool.clear()
                         Log.d(TAG, "onReceive: array2D = " + array2D.contentDeepToString())
                         val outputData = tfLiteResAcc.runInference(array2D)  // directly pass your 25x3 2D array
+                        print("outputData = " + outputData.contentToString())
                         // Find the index of the maximum value in the outputData
                         maxIndex = outputData.indices.maxByOrNull { outputData[it] } ?: -1
 
@@ -243,6 +261,11 @@ class RecordingActivity : AppCompatActivity() {
 //        thingyGyro = findViewById(R.id.thingy_gyro)
 //        thingyMag = findViewById(R.id.thingy_mag)
 //    }
+
+    private fun getStd(numbers: List<Float>, mean: Double): Float {
+        val variance = numbers.sumOf { (it - mean).pow(2) } / numbers.size
+        return sqrt(variance).toFloat()
+    }
 
     private fun updateRespeckData(liveData: RESpeckLiveData) {
         if (mIsRespeckRecording) {
