@@ -91,7 +91,7 @@ class RecordingActivity : AppCompatActivity() {
     // inference models
     lateinit var tfLiteResAcc: MyTFLiteInference
     // model paths
-    var respeck_accel_model_path = "c2_res_accel_1106.tflite"
+    var respeck_accel_model_path = "c2_res_accel_1113_s_37_bn.tflite"
 //    var respeck_accel_model_path = "t_c2_res_accel_1017.tflite"
     lateinit var respeck_both_model_path: String
     lateinit var respeck_thingy_accel_model_path: String
@@ -100,7 +100,7 @@ class RecordingActivity : AppCompatActivity() {
     var maxIndex =  1
 
 
-    private val window_size = 50
+    private val window_size = 25
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -122,10 +122,10 @@ class RecordingActivity : AppCompatActivity() {
         setupInputs()
 
         // read json file
-        val jsonFile = "activity_encodings.json"
+        val jsonFile = "activity_classes_1113_37.json"
         val jsonStr = application.assets.open(jsonFile).bufferedReader().use { it.readText() }
         val jsonObj = JSONObject(jsonStr)
-        val activityLabels = jsonObj.getJSONArray("activity_encodings")
+        val activityLabels = jsonObj.getJSONArray("activity_classes")
         // read list of list of strings as array of array of strings
         activityEncodings = Array(activityLabels.length()) { Array(2) { "" } }
         for (i in 0 until activityLabels.length()) {
@@ -161,7 +161,7 @@ class RecordingActivity : AppCompatActivity() {
                         // Convert ArrayList<FloatArray> to 25x3 float array
                         val array2D = Array(window_size) { FloatArray(3) }
                         for (i in 0 until window_size) {
-                            array2D[i] = respeckPool[i]
+                            array2D[i] = respeckPool[i]  // TODO： add normalization to center it
                         }
                         // Clear respeckPool
                         respeckPool.clear()
@@ -541,8 +541,8 @@ class RecordingActivity : AppCompatActivity() {
             Log.i(TAG, "saveRecording: error = ${e.toString()}")
             formattedDate = currentTime.toString()
         }
-        val filename = "${sensorType}_${universalSubjectId}_${activityType}_${activitySubtype}_${formattedDate}.csv" // TODO format this to human readable
-
+//        val filename = "${sensorType}_${universalSubjectId}_${activityType}_${activitySubtype}_${formattedDate}.csv" // TODO format this to human readable
+        val filename = "${sensorType}_${universalSubjectId}_${formattedDate}.csv" // TODO format this to human readable
         val file = File(getExternalFilesDir(null), filename)
 
         Log.d(TAG, "saveRecording: filename = " + file.toString())
@@ -559,8 +559,8 @@ class RecordingActivity : AppCompatActivity() {
 
                 // the header columns in here
                 dataWriter.append("# Sensor type: $sensorType").append("\n")
-                dataWriter.append("# Activity type: $activityType").append("\n")
-                dataWriter.append("# Activity subtype: $activitySubtype").append("\n")
+//                dataWriter.append("# Activity type: $activityType").append("\n")
+//                dataWriter.append("# Activity subtype: $activitySubtype").append("\n")
                 dataWriter.append("# Subject id: $universalSubjectId").append("\n")
                 dataWriter.append("# Notes: $notes").append("\n")
 

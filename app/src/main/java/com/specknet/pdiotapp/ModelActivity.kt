@@ -234,7 +234,7 @@ class MyTFLiteInference(context: Context, modelFilePath: String = "c2_res_accel_
 
     // 执行推理
     fun runInference(inputData: Array<FloatArray>): FloatArray {
-        val inputBuffer = ByteBuffer.allocateDirect(4 * 50 * 3)
+        val inputBuffer = ByteBuffer.allocateDirect(4 * 25 * 3)
         inputBuffer.order(ByteOrder.nativeOrder())
 
         // Converting 2D array data into ByteBuffer format
@@ -244,11 +244,11 @@ class MyTFLiteInference(context: Context, modelFilePath: String = "c2_res_accel_
             }
         }
 
-        val outputBuffer = ByteBuffer.allocateDirect(4 * 44) // Assuming your output tensor remains the same size
+        val outputBuffer = ByteBuffer.allocateDirect(4 * 37) // Assuming your output tensor remains the same size
 
         interpreter.run(inputBuffer, outputBuffer)
 
-        val outputData = FloatArray(44)
+        val outputData = FloatArray(37)
         outputBuffer.rewind()
         outputBuffer.asFloatBuffer().get(outputData)
 
