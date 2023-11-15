@@ -25,9 +25,16 @@ import com.specknet.pdiotapp.utils.RESpeckLiveData
 import com.specknet.pdiotapp.utils.ThingyLiveData
 import kotlinx.android.synthetic.main.activity_model.output
 import org.json.JSONObject
+import org.tensorflow.lite.DataType
+import org.tensorflow.lite.Interpreter
 import java.io.*
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.nio.MappedByteBuffer
+import java.nio.channels.FileChannel
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.math.exp
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -92,7 +99,7 @@ class RecordingActivity : AppCompatActivity() {
     // inference models
     lateinit var tfLiteResAcc: MyTFLiteInference
     // model paths
-    var respeck_accel_model_path = "t_c2_res_accel_1115_s_2_bn.tflite"
+    var respeck_accel_model_path = "c2_res_accel_1115_s_26_bn.tflite"
 //    var respeck_accel_model_path = "t_c2_res_accel_1017.tflite"
     lateinit var respeck_both_model_path: String
     lateinit var respeck_thingy_accel_model_path: String
@@ -102,6 +109,15 @@ class RecordingActivity : AppCompatActivity() {
 
 
     private val window_size = 25
+
+    private fun loadModelFile(modelPath: String, context: Context): MappedByteBuffer {
+        val fileDescriptor = context.assets.openFd(modelPath)
+        val inputStream = FileInputStream(fileDescriptor.fileDescriptor)
+        val fileChannel = inputStream.channel
+        val startOffset = fileDescriptor.startOffset
+        val declaredLength = fileDescriptor.declaredLength
+        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
+    }
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -123,7 +139,7 @@ class RecordingActivity : AppCompatActivity() {
         setupInputs()
 
         // read json file
-        val jsonFile = "t_activity_classes_1115_2.json"
+        val jsonFile = "activity_classes_1115_26.json"
         val jsonStr = application.assets.open(jsonFile).bufferedReader().use { it.readText() }
         val jsonObj = JSONObject(jsonStr)
         val activityLabels = jsonObj.getJSONArray("activity_classes")
@@ -135,6 +151,103 @@ class RecordingActivity : AppCompatActivity() {
             activityEncodings[i][1] = activityLabel.getString(1)
         }
         Log.d(TAG, "onCreate: activityEncodings = " + activityEncodings.contentDeepToString())
+
+//        Log.d(TAG, "onCreate: setting up Respeck Accel Inference Model Interpreter")
+//        // initialize respeck accel inference model
+//        val file = File(getExternalFilesDir(null), respeck_accel_model_path)
+//        var plainInterpreter = Interpreter(file)
+//        Log.d(TAG, "onCreate: plainInterpreter = $plainInterpreter")
+        val array2D = arrayOf(
+            floatArrayOf(0.38317946f, 0.25309074f, 0.4085955f),
+            floatArrayOf(-1.2610607f, -1.5700204f, -0.6086547f),
+            floatArrayOf(0.025735933f, -0.8193276f, -0.5238839f),
+            floatArrayOf(-0.97510594f, -0.8729485f, 1.3410748f),
+            floatArrayOf(0.9550891f, 0.8429208f, 0.95960605f),
+            floatArrayOf(0.38317946f, -1.7308831f, 1.0443769f),
+            floatArrayOf(-0.8321285f, -1.3019159f, -2.0497591f),
+            floatArrayOf(0.740623f, 0.03860706f, 0.9172206f),
+            floatArrayOf(0.09722464f, -0.76570666f, 0.4085955f),
+            floatArrayOf(1.955931f, 0.09222797f, -0.735811f),
+            floatArrayOf(-1.189572f, 2.1298227f, 0.53575176f),
+            floatArrayOf(-1.6899929f, -0.015013857f, 0.49336636f),
+            floatArrayOf(-1.1180834f, 0.62843716f, 1.0019914f),
+            floatArrayOf(0.025735933f, 0.62843716f, -1.541134f),
+            floatArrayOf(0.025735933f, -0.1758766f, 0.53575176f),
+            floatArrayOf(1.1695552f, 0.5211953f, 0.36621007f),
+            floatArrayOf(0.9550891f, 0.03860706f, -1.0748944f),
+            floatArrayOf(-0.9036172f, -0.55122304f, -0.6086547f),
+            floatArrayOf(0.45466816f, 1.4863718f, -0.735811f),
+            floatArrayOf(-0.5461737f, 0.03860706f, 0.49336636f),
+            floatArrayOf(1.5269988f, -0.06863477f, -1.2868215f),
+            floatArrayOf(1.7414649f, 0.735679f, 0.95960605f),
+            floatArrayOf(-1.189572f, 1.7008555f, -1.4563632f),
+            floatArrayOf(-0.40319628f, 0.5211953f, -0.5662693f),
+            floatArrayOf(-0.3317076f, -1.784504f, 1.7225437f)
+        )
+//        // convert array2D to feed into interpreter
+//        val inputArray = Array(1) { Array(25) { FloatArray(3) } }
+//        for (i in 0 until 25) {
+//            for (j in 0 until 3) {
+//                inputArray[0][i][j] = array2D[i][j]
+//            }
+//        }
+//        Log.d(TAG, "onCreate: inputArray = " + inputArray.contentDeepToString())
+//        // run inference
+//        val outputArray = Array(1) { FloatArray(26) }
+//        plainInterpreter.run(inputArray, outputArray)
+//        Log.d(TAG, "onCreate: outputArray = " + outputArray.contentDeepToString())
+//        // convert outputArray to feed into softmax
+//        val outputData = outputArray[0].mapIndexed { index, value -> value / 256 }.toFloatArray()
+//        Log.d(TAG, "onCreate: outputData = " + outputData.contentToString())
+//        val probabilities = softmax(outputData)
+//        Log.d(TAG, "onCreate: probabilities = " + probabilities.contentToString())
+//        // Find the index of the maximum value in the outputData
+//        maxIndex = probabilities.indices.maxByOrNull { outputData[it] } ?: -1
+//        // get activity type and subtype from maxIndex
+//        activity_type = activityEncodings[maxIndex][0]
+//        activity_subtype = activityEncodings[maxIndex][1]
+//        // concat them as one string
+//        val outputStr = "Predicted class: $activity_type - $activity_subtype";
+//        Log.d(TAG, "onCreate: outputStr = " + outputStr)
+
+        // add a placeholder object for context
+        val placeholderButton = Button(this)
+        val context = placeholderButton.context;
+        val modelPath = "c2_res_accel_1115_s_26_bn.tflite"
+        val interpreter = Interpreter(loadModelFile(modelPath, context))
+        // Get input and output details
+        val inputIndex = 0
+        val inputShape = interpreter.getInputTensor(inputIndex).shape()
+        val outputIndex = 0
+        val outputShape = interpreter.getOutputTensor(outputIndex).shape()
+        // Replace 'inputData' with your input data
+        val inputBuffer = ByteBuffer.allocateDirect(4 * 25 * 3)
+        inputBuffer.order(ByteOrder.nativeOrder())
+        // Converting 2D array data into ByteBuffer format
+        for (i in array2D.indices) {
+            for (j in array2D[i].indices) {
+                inputBuffer.putFloat(array2D[i][j])
+            }
+        }
+        // Run inference
+        val outputBuffer = ByteBuffer.allocateDirect(4 * 26)
+        outputBuffer.order(ByteOrder.nativeOrder())
+        interpreter.run(inputBuffer, outputBuffer)
+        // Converting ByteBuffer output to float array
+        val outputData = FloatArray(outputShape[1])
+        outputBuffer.rewind()
+        outputBuffer.asFloatBuffer().get(outputData)
+        Log.d(TAG, "onCreate: outputData = " + outputData.contentToString())
+
+//        val flatInputArray = array2D.flatMap { it.asList() }.toFloatArray()
+//        val inputArray = Array(1) { Array(25) { FloatArray(3) } }
+//        for (i in 0 until 25) {
+//            for (j in 0 until 3) {
+//                inputArray[0][i][j] = array2D[i][j]
+//            }
+//        }
+//        val outputArray = tfLiteModel.runInference(array2D);
+//        Log.d(TAG, "outputArray = " + outputArray.contentToString())
 
         Log.d(TAG, "onCreate: setting up respeck receiver")
         // register respeck receiver
@@ -183,20 +296,26 @@ class RecordingActivity : AppCompatActivity() {
                         // Clear respeckPool
                         respeckPool.clear()
                         Log.d(TAG, "onReceive: array2D = " + array2D.contentDeepToString())
-                        var outputData = tfLiteResAcc.runInference(array2D)  // directly pass your 25x3 2D array
-                        outputData = outputData.mapIndexed { index, value -> value / 256 }.toFloatArray()
-                        Log.d(TAG, "outputData = " + outputData.contentToString())
-                        val probabilities = softmax(outputData)
-                        Log.d(TAG, "probabilities = " + probabilities.contentToString())
-                        // Find the index of the maximum value in the outputData
-                        maxIndex = probabilities.indices.maxByOrNull { outputData[it] } ?: -1
 
-                        // get activity type and subtype from maxIndex
-                        activity_type = activityEncodings[maxIndex][0]
-                        activity_subtype = activityEncodings[maxIndex][1]
-                        // concat them as one string
-                        val outputStr = "Predicted class: $activity_type - $activity_subtype";
-                        runOnUiThread { textView.text = outputStr }
+                        val tfLiteModel = MyTFLiteModel(context);
+//                        val flatInputArray = array2D.flatMap { it.asList() }.toFloatArray()
+                        val outputArray = tfLiteModel.runInference(array2D);
+                        Log.d(TAG, "outputArray = " + outputArray.contentToString())
+
+//                        var outputData = tfLiteResAcc.runInference(array2D)  // directly pass your 25x3 2D array
+//                        outputData = outputData.mapIndexed { index, value -> value / 256 }.toFloatArray()
+//                        Log.d(TAG, "outputData = " + outputData.contentToString())
+//                        val probabilities = softmax(outputData)
+//                        Log.d(TAG, "probabilities = " + probabilities.contentToString())
+//                        // Find the index of the maximum value in the outputData
+//                        maxIndex = probabilities.indices.maxByOrNull { outputData[it] } ?: -1
+//
+//                        // get activity type and subtype from maxIndex
+//                        activity_type = activityEncodings[maxIndex][0]
+//                        activity_subtype = activityEncodings[maxIndex][1]
+//                        // concat them as one string
+//                        val outputStr = "Predicted class: $activity_type - $activity_subtype";
+//                        runOnUiThread { textView.text = outputStr }
                     }
                     time += 1
                     updateGraph("respeck", liveData.accelX, liveData.accelY, liveData.accelZ)
@@ -687,4 +806,45 @@ class RecordingActivity : AppCompatActivity() {
 
     }
 
+}
+
+class MyTFLiteModel(context: Context) {
+    private val interpreter: Interpreter
+
+    init {
+        // Load the TFLite model
+        val model = loadModelFile(context, "c2_res_accel_1115_s_26_bn.tflite")
+
+        // Initialize the TFLite interpreter
+        interpreter = Interpreter(model)
+    }
+
+    private fun loadModelFile(context: Context, modelPath: String): ByteBuffer {
+        val assetManager = context.assets
+        val fileDescriptor = assetManager.openFd(modelPath)
+        val inputStream = fileDescriptor.createInputStream()
+        val fileSize = fileDescriptor.length.toInt()
+        val modelBuffer = ByteBuffer.allocateDirect(fileSize)
+
+        inputStream.use { input ->
+            modelBuffer.order(ByteOrder.nativeOrder())
+            val bytes = ByteArray(1024)
+            var length: Int
+            while (input.read(bytes).also { length = it } > 0) {
+                modelBuffer.put(bytes, 0, length)
+            }
+        }
+
+        return modelBuffer
+    }
+
+    // Define a function to run inference
+    fun runInference(inputData: Array<FloatArray>): FloatArray {
+        val outputArray = Array(1) { FloatArray(26) } // Adjust the output size based on your model's output
+
+        // Perform inference
+        interpreter.run(inputData, outputArray)
+
+        return outputArray[0]
+    }
 }
