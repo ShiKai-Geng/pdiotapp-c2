@@ -1,1 +1,1 @@
-{"activity_classes": [{"stationary": "normal"}, {"moving": "normal"}]}
+{"activity_classes": [["stationary", "normal"], ["moving", "normal"]]}
