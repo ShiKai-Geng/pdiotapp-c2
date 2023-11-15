@@ -23,13 +23,11 @@ import com.specknet.pdiotapp.utils.Constants
 import com.specknet.pdiotapp.utils.CountUpTimer
 import com.specknet.pdiotapp.utils.RESpeckLiveData
 import com.specknet.pdiotapp.utils.ThingyLiveData
+import org.json.JSONObject
 import java.io.*
-import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
-import java.lang.StringBuilder
-
-import org.json.JSONObject;
+import kotlin.math.exp
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -93,7 +91,7 @@ class RecordingActivity : AppCompatActivity() {
     // inference models
     lateinit var tfLiteResAcc: MyTFLiteInference
     // model paths
-    var respeck_accel_model_path = "c2_res_accel_1114_s_37_bn.tflite"
+    var respeck_accel_model_path = "c2_res_accel_1115_s_26_bn.tflite"
 //    var respeck_accel_model_path = "t_c2_res_accel_1017.tflite"
     lateinit var respeck_both_model_path: String
     lateinit var respeck_thingy_accel_model_path: String
@@ -124,7 +122,7 @@ class RecordingActivity : AppCompatActivity() {
         setupInputs()
 
         // read json file
-        val jsonFile = "activity_classes_1113_37.json"
+        val jsonFile = "activity_classes_1115_26.json"
         val jsonStr = application.assets.open(jsonFile).bufferedReader().use { it.readText() }
         val jsonObj = JSONObject(jsonStr)
         val activityLabels = jsonObj.getJSONArray("activity_classes")
@@ -184,9 +182,11 @@ class RecordingActivity : AppCompatActivity() {
                         respeckPool.clear()
                         Log.d(TAG, "onReceive: array2D = " + array2D.contentDeepToString())
                         val outputData = tfLiteResAcc.runInference(array2D)  // directly pass your 25x3 2D array
-                        print("outputData = " + outputData.contentToString())
+                        Log.d(TAG, "outputData = " + outputData.contentToString())
+                        val probabilities = softmax(outputData)
+                        Log.d(TAG, "probabilities = " + probabilities.contentToString())
                         // Find the index of the maximum value in the outputData
-                        maxIndex = outputData.indices.maxByOrNull { outputData[it] } ?: -1
+                        maxIndex = probabilities.indices.maxByOrNull { outputData[it] } ?: -1
 
                         // get activity type and subtype from maxIndex
                         activity_type = activityEncodings[maxIndex][0]
@@ -261,6 +261,30 @@ class RecordingActivity : AppCompatActivity() {
 //        thingyGyro = findViewById(R.id.thingy_gyro)
 //        thingyMag = findViewById(R.id.thingy_mag)
 //    }
+
+    private fun softmax(input: FloatArray): FloatArray {
+        // Find the maximum value in the input array
+        var max = input[0]
+        for (i in 1 until input.size) {
+            if (input[i] > max) {
+                max = input[i]
+            }
+        }
+
+        // Apply softmax function
+        val result = FloatArray(input.size)
+        var sum = 0.0f
+        for (i in input.indices) {
+            result[i] = exp((input[i] - max).toDouble()).toFloat()
+            sum += result[i]
+        }
+
+        // Normalize to get probabilities
+        for (i in result.indices) {
+            result[i] /= sum
+        }
+        return result
+    }
 
     private fun getStd(numbers: List<Float>, mean: Double): Float {
         val variance = numbers.sumOf { (it - mean).pow(2) } / numbers.size

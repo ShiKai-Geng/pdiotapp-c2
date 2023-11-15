@@ -27,6 +27,7 @@ import kotlin.collections.ArrayList
 import kotlin.concurrent.scheduleAtFixedRate
 
 import org.tensorflow.lite.Interpreter
+import java.io.File
 import java.io.FileInputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -219,8 +220,26 @@ class MyTFLiteInference(context: Context, modelFilePath: String = "c2_res_accel_
 
     init {
         // 初始化 TensorFlow Lite 解释器
-        interpreter = Interpreter(loadModelFile(context, modelFilePath))
+//        interpreter = Interpreter(loadModelFile(context, modelFilePath))
+        val modelFile = loadModelFile(context, modelFilePath)
+        interpreter = Interpreter(loadModelFileOnly(context, modelFilePath));
+//        interpreter = TensorFlowInferenceInterface(context.assets, modelFilePath);
 //        print("model init")
+    }
+
+    private fun loadModelFileOnly(context: Context, modelFilePath: String): File {
+        val assetFileDescriptor = context.assets.openFd(modelFilePath) // 替换为你的模型文件名
+        val inputStream = FileInputStream(assetFileDescriptor.fileDescriptor)
+        val fileChannel = inputStream.channel
+        val startOffset = assetFileDescriptor.startOffset
+        val declaredLength = assetFileDescriptor.declaredLength
+
+        val file = File.createTempFile("model", "tflite")
+        val fileChannelOutput = file.outputStream().channel
+        fileChannel.transferTo(startOffset, declaredLength, fileChannelOutput)
+        fileChannel.close()
+        fileChannelOutput.close()
+        return file
     }
 
     // 加载模型文件
@@ -246,11 +265,11 @@ class MyTFLiteInference(context: Context, modelFilePath: String = "c2_res_accel_
             }
         }
 
-        val outputBuffer = ByteBuffer.allocateDirect(4 * 37) // Assuming your output tensor remains the same size
+        val outputBuffer = ByteBuffer.allocateDirect(4 * 26) // Assuming your output tensor remains the same size
 
         interpreter.run(inputBuffer, outputBuffer)
 
-        val outputData = FloatArray(37)
+        val outputData = FloatArray(26)
         outputBuffer.rewind()
         outputBuffer.asFloatBuffer().get(outputData)
 //        print("outputdata")
