@@ -27,6 +27,7 @@ import kotlin.collections.ArrayList
 import kotlin.concurrent.scheduleAtFixedRate
 
 import org.tensorflow.lite.Interpreter
+import org.tensorflow.lite.DataType
 import java.io.File
 import java.io.FileInputStream
 import java.nio.ByteBuffer
@@ -225,6 +226,7 @@ class MyTFLiteInference(context: Context, modelFilePath: String = "c2_res_accel_
         interpreter = Interpreter(loadModelFileOnly(context, modelFilePath));
 //        interpreter = TensorFlowInferenceInterface(context.assets, modelFilePath);
 //        print("model init")
+        val options = Interpreter.Options();
     }
 
     private fun loadModelFileOnly(context: Context, modelFilePath: String): File {
@@ -257,19 +259,23 @@ class MyTFLiteInference(context: Context, modelFilePath: String = "c2_res_accel_
 //        print("inference")
         val inputBuffer = ByteBuffer.allocateDirect(4 * 25 * 3)
         inputBuffer.order(ByteOrder.nativeOrder())
-
         // Converting 2D array data into ByteBuffer format
+        var inputdata_string = ""
         for (i in inputData.indices) {
+            var inputdata_substring = "[" + inputData[i].joinToString(separator = ",") + "]"
+            inputdata_string = inputdata_string + "," + inputdata_substring
             for (j in inputData[i].indices) {
                 inputBuffer.putFloat(inputData[i][j])
             }
         }
+        inputdata_string = "[" + inputdata_string + "]"
+        Log.d("input", inputdata_string)
 
-        val outputBuffer = ByteBuffer.allocateDirect(4 * 26) // Assuming your output tensor remains the same size
+        val outputBuffer = ByteBuffer.allocateDirect(4 * 2) // Assuming your output tensor remains the same size
 
         interpreter.run(inputBuffer, outputBuffer)
 
-        val outputData = FloatArray(26)
+        val outputData = FloatArray(2)
         outputBuffer.rewind()
         outputBuffer.asFloatBuffer().get(outputData)
 //        print("outputdata")

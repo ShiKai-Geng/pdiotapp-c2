@@ -23,6 +23,7 @@ import com.specknet.pdiotapp.utils.Constants
 import com.specknet.pdiotapp.utils.CountUpTimer
 import com.specknet.pdiotapp.utils.RESpeckLiveData
 import com.specknet.pdiotapp.utils.ThingyLiveData
+import kotlinx.android.synthetic.main.activity_model.output
 import org.json.JSONObject
 import java.io.*
 import java.text.SimpleDateFormat
@@ -91,7 +92,7 @@ class RecordingActivity : AppCompatActivity() {
     // inference models
     lateinit var tfLiteResAcc: MyTFLiteInference
     // model paths
-    var respeck_accel_model_path = "c2_res_accel_1115_s_26_bn.tflite"
+    var respeck_accel_model_path = "t_c2_res_accel_1115_s_2_bn.tflite"
 //    var respeck_accel_model_path = "t_c2_res_accel_1017.tflite"
     lateinit var respeck_both_model_path: String
     lateinit var respeck_thingy_accel_model_path: String
@@ -122,7 +123,7 @@ class RecordingActivity : AppCompatActivity() {
         setupInputs()
 
         // read json file
-        val jsonFile = "activity_classes_1115_26.json"
+        val jsonFile = "t_activity_classes_1115_2.json"
         val jsonStr = application.assets.open(jsonFile).bufferedReader().use { it.readText() }
         val jsonObj = JSONObject(jsonStr)
         val activityLabels = jsonObj.getJSONArray("activity_classes")
@@ -181,12 +182,13 @@ class RecordingActivity : AppCompatActivity() {
                         // Clear respeckPool
                         respeckPool.clear()
                         Log.d(TAG, "onReceive: array2D = " + array2D.contentDeepToString())
-                        val outputData = tfLiteResAcc.runInference(array2D)  // directly pass your 25x3 2D array
+                        var outputData = tfLiteResAcc.runInference(array2D)  // directly pass your 25x3 2D array
+                        outputData = outputData.mapIndexed { index, value -> value / 256 }.toFloatArray()
                         Log.d(TAG, "outputData = " + outputData.contentToString())
-                        val probabilities = softmax(outputData)
-                        Log.d(TAG, "probabilities = " + probabilities.contentToString())
+//                        val probabilities = softmax(outputData)
+//                        Log.d(TAG, "probabilities = " + probabilities.contentToString())
                         // Find the index of the maximum value in the outputData
-                        maxIndex = probabilities.indices.maxByOrNull { outputData[it] } ?: -1
+                        maxIndex = outputData.indices.maxByOrNull { outputData[it] } ?: -1
 
                         // get activity type and subtype from maxIndex
                         activity_type = activityEncodings[maxIndex][0]
