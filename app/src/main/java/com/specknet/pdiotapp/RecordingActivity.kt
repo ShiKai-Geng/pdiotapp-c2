@@ -148,6 +148,7 @@ class RecordingActivity : AppCompatActivity() {
                     // init model if not, on first receive
                     if (!this@RecordingActivity::tfLiteResAcc.isInitialized) {
 //                        print("initializing model")
+                        Log.d(TAG, "ini model")
                         tfLiteResAcc = MyTFLiteInference(context, modelFilePath = respeck_accel_model_path)  // initialize your inference class
                     } else {
 //                        print("model already initialized")
@@ -185,10 +186,10 @@ class RecordingActivity : AppCompatActivity() {
                         var outputData = tfLiteResAcc.runInference(array2D)  // directly pass your 25x3 2D array
                         outputData = outputData.mapIndexed { index, value -> value / 256 }.toFloatArray()
                         Log.d(TAG, "outputData = " + outputData.contentToString())
-//                        val probabilities = softmax(outputData)
-//                        Log.d(TAG, "probabilities = " + probabilities.contentToString())
+                        val probabilities = softmax(outputData)
+                        Log.d(TAG, "probabilities = " + probabilities.contentToString())
                         // Find the index of the maximum value in the outputData
-                        maxIndex = outputData.indices.maxByOrNull { outputData[it] } ?: -1
+                        maxIndex = probabilities.indices.maxByOrNull { outputData[it] } ?: -1
 
                         // get activity type and subtype from maxIndex
                         activity_type = activityEncodings[maxIndex][0]
