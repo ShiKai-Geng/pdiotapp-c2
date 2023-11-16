@@ -103,7 +103,7 @@ class RecordingActivity : AppCompatActivity() {
     var outputIndex = 0
     lateinit var outputShape: IntArray
     // model paths
-    var respeck_accel_model_path = "c2_res_accel_1115_s_26_bn.tflite"
+    var respeck_accel_model_path = "t_c2_res_accel_1116_s_2_bn.tflite"
 //    var respeck_accel_model_path = "t_c2_res_accel_1017.tflite"
     lateinit var respeck_both_model_path: String
     lateinit var respeck_thingy_accel_model_path: String
@@ -143,7 +143,7 @@ class RecordingActivity : AppCompatActivity() {
         setupInputs()
 
         // read json file
-        val jsonFile = "activity_classes_1115_26.json"
+        val jsonFile = "t_activity_classes_1115_2.json"
         val jsonStr = application.assets.open(jsonFile).bufferedReader().use { it.readText() }
         val jsonObj = JSONObject(jsonStr)
         val activityLabels = jsonObj.getJSONArray("activity_classes")
@@ -278,7 +278,7 @@ class RecordingActivity : AppCompatActivity() {
                             }
                         }
                         // Run inference
-                        val outputBuffer = ByteBuffer.allocateDirect(4 * 26)
+                        val outputBuffer = ByteBuffer.allocateDirect(4 * 2)
                         outputBuffer.order(ByteOrder.nativeOrder())
                         tfLiteResAcc.run(inputBuffer, outputBuffer)
                         // Converting ByteBuffer output to float array
