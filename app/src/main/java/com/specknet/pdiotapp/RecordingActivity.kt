@@ -289,12 +289,13 @@ class RecordingActivity : AppCompatActivity() {
 
                         // Find the index of the maximum value in the outputData
                         maxIndex = outputData.indices.maxByOrNull { outputData[it] } ?: -1
-//
+                        Log.d(TAG, "onCreate: maxIndex = $maxIndex")
                         // get activity type and subtype from maxIndex
                         activity_type = activityEncodings[maxIndex][0]
                         activity_subtype = activityEncodings[maxIndex][1]
                         // concat them as one string
                         val outputStr = "Predicted class: $activity_type - $activity_subtype";
+                        Log.d(TAG, "outputStr: $outputStr")
                         runOnUiThread { textView.text = outputStr }
                     }
                     time += 1
