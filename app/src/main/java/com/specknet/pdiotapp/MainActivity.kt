@@ -99,7 +99,7 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
         modelButton.setOnClickListener {
-            val intent = Intent(this, ModelActivity::class.java)
+            val intent = Intent(this, ReadCsvActivity::class.java)
             startActivity(intent)
         }
     }

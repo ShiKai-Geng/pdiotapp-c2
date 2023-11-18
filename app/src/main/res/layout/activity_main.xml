@@ -77,7 +77,7 @@
             android:layout_marginTop="100px"
             android:layout_marginBottom="100px"
             android:background="#03A9F4"
-            android:text="activate model"
+            android:text="view data"
             android:textColor="#FFFFFF"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

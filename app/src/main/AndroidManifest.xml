@@ -26,10 +26,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".ModelActivity"
-            android:exported="true"
-            android:label="@string/title_activity_model"
-            android:theme="@style/AppTheme" />
+            android:name=".ReadCsvActivity"
+            android:exported="true" />
 
         <service
             android:name=".bluetooth.BluetoothSpeckService"
