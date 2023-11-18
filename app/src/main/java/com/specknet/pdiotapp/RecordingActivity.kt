@@ -23,10 +23,18 @@ import com.specknet.pdiotapp.utils.Constants
 import com.specknet.pdiotapp.utils.CountUpTimer
 import com.specknet.pdiotapp.utils.RESpeckLiveData
 import com.specknet.pdiotapp.utils.ThingyLiveData
+import kotlinx.android.synthetic.main.activity_model.output
 import org.json.JSONObject
+import org.tensorflow.lite.DataType
+import org.tensorflow.lite.Interpreter
 import java.io.*
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.nio.MappedByteBuffer
+import java.nio.channels.FileChannel
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.math.exp
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -89,9 +97,13 @@ class RecordingActivity : AppCompatActivity() {
     lateinit var activityEncodings: Array<Array<String>>
 
     // inference models
-    lateinit var tfLiteResAcc: MyTFLiteInference
+    lateinit var tfLiteResAcc: Interpreter
+    var inputIndex = 0
+    lateinit var inputShape: IntArray
+    var outputIndex = 0
+    lateinit var outputShape: IntArray
     // model paths
-    var respeck_accel_model_path = "c2_res_accel_1115_s_26_bn.tflite"
+    var respeck_accel_model_path = "c2_res_accel_1116_s_26_bn_nonorm.tflite"
 //    var respeck_accel_model_path = "t_c2_res_accel_1017.tflite"
     lateinit var respeck_both_model_path: String
     lateinit var respeck_thingy_accel_model_path: String
@@ -101,6 +113,15 @@ class RecordingActivity : AppCompatActivity() {
 
 
     private val window_size = 25
+
+    private fun loadModelFile(modelPath: String, context: Context): MappedByteBuffer {
+        val fileDescriptor = context.assets.openFd(modelPath)
+        val inputStream = FileInputStream(fileDescriptor.fileDescriptor)
+        val fileChannel = inputStream.channel
+        val startOffset = fileDescriptor.startOffset
+        val declaredLength = fileDescriptor.declaredLength
+        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
+    }
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -147,7 +168,15 @@ class RecordingActivity : AppCompatActivity() {
                     // init model if not, on first receive
                     if (!this@RecordingActivity::tfLiteResAcc.isInitialized) {
 //                        print("initializing model")
-                        tfLiteResAcc = MyTFLiteInference(context, modelFilePath = respeck_accel_model_path)  // initialize your inference class
+                        Log.d(TAG, "load model")
+                        tfLiteResAcc = Interpreter(loadModelFile(respeck_accel_model_path, context))
+                        // Get input and output details
+                        inputIndex = 0
+                        inputShape = tfLiteResAcc.getInputTensor(inputIndex).shape()
+                        outputIndex = 0
+                        outputShape = tfLiteResAcc.getOutputTensor(outputIndex).shape()
+                        Log.d(TAG, "inputShape = " + inputShape.contentToString())
+                        Log.d(TAG, "outputShape = " + outputShape.contentToString())
                     } else {
 //                        print("model already initialized")
                     }
@@ -161,38 +190,47 @@ class RecordingActivity : AppCompatActivity() {
                     val accelData = floatArrayOf(liveData.accelX, liveData.accelY, liveData.accelZ)
                     respeckPool.add(accelData);
                     if (respeckPool.size >= window_size) {
-                        // get mean and std of xyz
-                        val resX = respeckPool.map { it[0] }
-                        val resY = respeckPool.map { it[1] }
-                        val resZ = respeckPool.map { it[2] }
-                        val meanX = resX.average()
-                        val stdX = getStd(resX, meanX)
-                        val meanY = resY.average()
-                        val stdY = getStd(resY, meanY)
-                        val meanZ = resZ.average()
-                        val stdZ = getStd(resZ, meanZ)
                         // Convert ArrayList<FloatArray> to 25x3 float array
                         val array2D = Array(window_size) { FloatArray(3) }
                         for (i in 0 until window_size) {
-                            array2D[i][0] = ((respeckPool[i][0] - meanX) / stdX).toFloat()
-                            array2D[i][1] = ((respeckPool[i][1] - meanY) / stdY).toFloat()
-                            array2D[i][2] = ((respeckPool[i][2] - meanZ) / stdZ).toFloat()
+                            array2D[i][0] = ((respeckPool[i][0]))
+                            array2D[i][1] = ((respeckPool[i][1]))
+                            array2D[i][2] = ((respeckPool[i][2]))
                         }
                         // Clear respeckPool
                         respeckPool.clear()
                         Log.d(TAG, "onReceive: array2D = " + array2D.contentDeepToString())
-                        val outputData = tfLiteResAcc.runInference(array2D)  // directly pass your 25x3 2D array
-                        Log.d(TAG, "outputData = " + outputData.contentToString())
-                        val probabilities = softmax(outputData)
-                        Log.d(TAG, "probabilities = " + probabilities.contentToString())
-                        // Find the index of the maximum value in the outputData
-                        maxIndex = probabilities.indices.maxByOrNull { outputData[it] } ?: -1
+                        // TODO: see if by using rewind() can we make inputBuffer a field, not to allocate it every time
+                        val inputBuffer = ByteBuffer.allocateDirect(4 * 25 * 3)
+                        inputBuffer.order(ByteOrder.nativeOrder())
+                        inputBuffer.rewind();
+                        // Converting 2D array data into ByteBuffer format
+                        for (i in array2D.indices) {
+                            for (j in array2D[i].indices) {
+                                inputBuffer.putFloat(array2D[i][j])
+                            }
+                        }
+                        val bufferStr = inputBuffer.asCharBuffer().toString()
+                        Log.d(TAG, "Buffer: $bufferStr")
+                        // Run inference
+                        val outputBuffer = ByteBuffer.allocateDirect(4 * 26)
+                        outputBuffer.order(ByteOrder.nativeOrder())
+                        tfLiteResAcc.run(inputBuffer, outputBuffer)
+                        // Converting ByteBuffer output to float array
+                        val outputData = FloatArray(outputShape[1])
+                        outputBuffer.rewind()
+                        outputBuffer.asFloatBuffer().get(outputData)
+                        Log.d(TAG, "onCreate: outputData = " + outputData.contentToString())
 
+                        // Find the index of the maximum value in the outputData
+                        maxIndex = outputData.indices.maxByOrNull { outputData[it] } ?: -1
+                        Log.d(TAG, "onCreate: maxIndex = $maxIndex")
                         // get activity type and subtype from maxIndex
                         activity_type = activityEncodings[maxIndex][0]
                         activity_subtype = activityEncodings[maxIndex][1]
                         // concat them as one string
                         val outputStr = "Predicted class: $activity_type - $activity_subtype";
+                        Log.d(TAG, "outputStr: $outputStr")
                         runOnUiThread { textView.text = outputStr }
                     }
                     time += 1

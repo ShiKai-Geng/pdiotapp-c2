@@ -27,6 +27,7 @@ import kotlin.collections.ArrayList
 import kotlin.concurrent.scheduleAtFixedRate
 
 import org.tensorflow.lite.Interpreter
+import org.tensorflow.lite.DataType
 import java.io.File
 import java.io.FileInputStream
 import java.nio.ByteBuffer
@@ -69,6 +70,7 @@ class ModelActivity : AppCompatActivity() {
 //                        runOnUiThread { textView.text = "Predicted class: $maxIndex" }
 //        runOnUiThread { textView.text = outputStr }
         Log.i("yes", "what")
+
         // GET LIVE DATA
         respeckReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
@@ -225,6 +227,11 @@ class MyTFLiteInference(context: Context, modelFilePath: String = "c2_res_accel_
         interpreter = Interpreter(loadModelFileOnly(context, modelFilePath));
 //        interpreter = TensorFlowInferenceInterface(context.assets, modelFilePath);
 //        print("model init")
+        val options = Interpreter.Options();
+        val inputDetails = interpreter.getInputTensor(0).dataType()
+        val outputDetails = interpreter.getOutputTensor(0).dataType()
+        Log.d("in_datatype", inputDetails.toString())
+        Log.d("out_datatype", outputDetails.toString())
     }
 
     private fun loadModelFileOnly(context: Context, modelFilePath: String): File {
@@ -257,23 +264,26 @@ class MyTFLiteInference(context: Context, modelFilePath: String = "c2_res_accel_
 //        print("inference")
         val inputBuffer = ByteBuffer.allocateDirect(4 * 25 * 3)
         inputBuffer.order(ByteOrder.nativeOrder())
-
         // Converting 2D array data into ByteBuffer format
+        var inputdata_string = ""
         for (i in inputData.indices) {
+            var inputdata_substring = "[" + inputData[i].joinToString(separator = ",") + "]"
+            inputdata_string = inputdata_string + "," + inputdata_substring
             for (j in inputData[i].indices) {
                 inputBuffer.putFloat(inputData[i][j])
             }
         }
+        inputdata_string = "[" + inputdata_string + "]"
+        Log.d("input", inputdata_string)
 
-        val outputBuffer = ByteBuffer.allocateDirect(4 * 26) // Assuming your output tensor remains the same size
+        val outputBuffer = ByteBuffer.allocateDirect(4 * 2) // Assuming your output tensor remains the same size
+        outputBuffer.order(ByteOrder.nativeOrder())
 
         interpreter.run(inputBuffer, outputBuffer)
 
-        val outputData = FloatArray(26)
+        val outputData = FloatArray(2)
         outputBuffer.rewind()
         outputBuffer.asFloatBuffer().get(outputData)
-//        print("outputdata")
-//        print(outputData);
         val datastring = outputData.joinToString(separator = ",")
         Log.d("output", datastring)
         return outputData
