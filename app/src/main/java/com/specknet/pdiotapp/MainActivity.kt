@@ -12,6 +12,7 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Button
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import com.google.android.material.snackbar.Snackbar
@@ -45,6 +46,8 @@ class MainActivity : AppCompatActivity() {
 
     var isUserFirstTime = false
 
+    lateinit var username: String
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,6 +66,14 @@ class MainActivity : AppCompatActivity() {
             val introIntent = Intent(this, OnBoardingActivity::class.java)
             startActivity(introIntent)
         }
+
+        // Retrieve the username from the intent extras
+        username = intent.getStringExtra("username").toString()
+
+        // Display the welcome message in a TextView
+        val welcomeTextView = findViewById<TextView>(R.id.textView2)
+        welcomeTextView.text = "Welcome, $username!"
+
 
         liveProcessingButton = findViewById(R.id.live_button)
         pairingButton = findViewById(R.id.ble_button)
@@ -96,10 +107,13 @@ class MainActivity : AppCompatActivity() {
 
         recordButton.setOnClickListener {
             val intent = Intent(this, RecordingActivity::class.java)
+//            Log.d("main", "username = $username")
+            intent.putExtra("username", username)
             startActivity(intent)
         }
         modelButton.setOnClickListener {
             val intent = Intent(this, ReadCsvActivity::class.java)
+            intent.putExtra("username", username)
             startActivity(intent)
         }
     }

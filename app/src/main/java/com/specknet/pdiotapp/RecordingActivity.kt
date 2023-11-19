@@ -47,7 +47,7 @@ class RecordingActivity : AppCompatActivity() {
     lateinit var startRecordingButton: Button
     lateinit var cancelRecordingButton: Button
     lateinit var stopRecordingButton: Button
-    lateinit var univSubjectIdInput: EditText
+    lateinit var univSubjectIdInput: TextView
     lateinit var notesInput: EditText
 
     lateinit var timer: TextView
@@ -118,8 +118,11 @@ class RecordingActivity : AppCompatActivity() {
     lateinit var respeck_thingy_accel_model_path: String
     var activity_type = "-"
     var activity_subtype ="-"
+    var activity_subtype_SubAct = "-"
     var maxIndex =  -1
     var maxIndexSubAct = -1
+
+    lateinit var username: String
 
 
     private val window_size = 25
@@ -138,6 +141,14 @@ class RecordingActivity : AppCompatActivity() {
         Log.d(TAG, "onCreate: here")
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_recording)
+
+        // update username
+        username = intent.getStringExtra("username").toString()
+        Log.d(TAG, "onCreate: username = $username")
+        val usernameTextView = findViewById<TextView>(R.id.universal_subject_id_input)
+        runOnUiThread {
+            usernameTextView.text = username
+        }
 
         respeckOutputData = StringBuilder()
         thingyOutputData = StringBuilder()
@@ -178,6 +189,8 @@ class RecordingActivity : AppCompatActivity() {
             activityEncodingsSubAct[i] = activityLabelSubAct
         }
         Log.d(TAG, "onCreate: activityEncodingsSubAct = " + activityEncodingsSubAct.contentDeepToString())
+
+        val user = intent.getStringExtra("user")
 
         Log.d(TAG, "onCreate: setting up respeck receiver")
         // register respeck receiver
@@ -271,9 +284,10 @@ class RecordingActivity : AppCompatActivity() {
                         Log.d(TAG, "onCreate: maxIndexSubAct = $maxIndexSubAct")
                         // get activity type and subtype from maxIndex
                         activity_type = activityEncodings[maxIndex][0]
-                        activity_subtype = activityEncodingsSubAct[maxIndexSubAct]
-                        // concat them as one string
-                        val outputStr = "Predicted class: $activity_type - $activity_subtype";
+                        activity_subtype = activityEncodings[maxIndex][1]
+                        activity_subtype_SubAct = activityEncodingsSubAct[maxIndexSubAct]
+                        // concat them as one string  // TODO: remove this comparison
+                        val outputStr = "$activity_type / $activity_subtype_SubAct"
                         Log.d(TAG, "outputStr: $outputStr")
                         runOnUiThread { textView.text = outputStr }
                     }
@@ -373,7 +387,9 @@ class RecordingActivity : AppCompatActivity() {
 
     private fun updateRespeckData(liveData: RESpeckLiveData) {
         if (mIsRespeckRecording) {
-            val output = liveData.phoneTimestamp.toString() + "," +
+            val timestamp = liveData.phoneTimestamp
+            val date = Date(timestamp)
+            val output = date.toString()  + "," +
                     liveData.accelX + "," + liveData.accelY + "," + liveData.accelZ + "," +
                     liveData.gyro.x + "," + liveData.gyro.y + "," + liveData.gyro.z + "," + activity_type + "," + activity_subtype + "," + maxIndex + "\n"
 
@@ -547,10 +563,10 @@ class RecordingActivity : AppCompatActivity() {
 
             getInputs()
 
-            if (universalSubjectId.length != 8) {
-                Toast.makeText(this, "Input a correct student id", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+//            if (universalSubjectId.length != 8) {
+//                Toast.makeText(this, "Input a correct student id", Toast.LENGTH_SHORT).show()
+//                return@setOnClickListener
+//            }
 
             if (sensorType == "Respeck" && !respeckOn) {
                 Toast.makeText(this, "Respeck is not on! Check connection.", Toast.LENGTH_SHORT).show()

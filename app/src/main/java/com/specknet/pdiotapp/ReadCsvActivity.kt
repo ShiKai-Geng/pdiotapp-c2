@@ -13,6 +13,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import java.io.BufferedReader
 import java.io.FileReader
@@ -25,6 +26,9 @@ class ReadCsvActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var fileAdapter: FileAdapter
     private lateinit var sensorDataAdapter: SensorDataAdapter
+
+    private lateinit var username: String
+
     val TAG = "ReadCsvActivity"
 
     @SuppressLint("MissingInflatedId")
@@ -32,6 +36,8 @@ class ReadCsvActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.readcsv)
+
+        username = intent.getStringExtra("username").toString()
 
         calendarView = findViewById(R.id.calendarView)
 //        dataListView = findViewById(R.id.dataListView)
@@ -81,8 +87,17 @@ class ReadCsvActivity : AppCompatActivity() {
 
 //                    if (file.isDirectory) {
 //                        dataList.addAll(findCsvFilesInDirectory(file))
-                    if (file.isFile && file.extension == "csv"&& file.name.contains(date)) {
-                        dataList.add(file)
+                    if (file.isFile &&
+                        file.extension == "csv" &&
+                        file.name.contains(date)) {
+                        // username checks
+                        val parts = file.name.split("_")
+                        if (parts.size >= 2) {
+                            val fileUsername = parts[1]
+                            if (fileUsername == username) {
+                                dataList.add(file)
+                            }
+                        }
                     }
                 }
             }
@@ -107,18 +122,18 @@ class ReadCsvActivity : AppCompatActivity() {
 }
 
     fun showNoDataAlert(context: Context) {
-        val alertDialog = AlertDialog.Builder(context)
-            .setTitle("Warning")
-            .setMessage("No data for this date")
-            .setPositiveButton("accept") { dialog, which ->
-                // 这里可以处理确定按钮的点击事件
-            }
-            .setNegativeButton("cancel") { dialog, which ->
-                // 这里可以处理取消按钮的点击事件
-            }
-            .create()
-
-        alertDialog.show()
+//        val alertDialog = AlertDialog.Builder(context)
+//            .setTitle("Warning")
+//            .setMessage("No data for this date")
+//            .setPositiveButton("accept") { dialog, which ->
+//                // 这里可以处理确定按钮的点击事件
+//            }
+//            .setNegativeButton("cancel") { dialog, which ->
+//                // 这里可以处理取消按钮的点击事件
+//            }
+//            .create()
+        Toast.makeText(this, "No Data for this date", Toast.LENGTH_SHORT).show()
+//        alertDialog.show()
     }
     class FileViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val textView: TextView = view.findViewById(R.id.textView)
@@ -161,24 +176,31 @@ class ReadCsvActivity : AppCompatActivity() {
             val br = BufferedReader(FileReader(file))
             br.readLine() // Skip header
             var line: String?
+            var lineNumber = 0
 
             while (br.readLine().also { line = it } != null) {
-                val tokens = line!!.split(",")
-                if (tokens.size >= 10) {
-                    dataList.add(
-                        SensorData(
-                            timestamp = tokens[0],
-                            accelX = tokens[1],
-                            accelY = tokens[2],
-                            accelZ = tokens[3],
-                            gyroX = tokens[4],
-                            gyroY = tokens[5],
-                            gyroZ = tokens[6],
-                            activityType = tokens[7],
-                            activitySubtype = tokens[8],
-                            index = tokens[9]
+                lineNumber++
+
+                // Check if it's time to read a line (every 25 lines or last line)
+                if (lineNumber % 25 == 0 || !br.ready()) {
+                    val tokens = line!!.split(",")
+                    if (tokens.size >= 10) {
+                        val timestr = "${tokens[0].split(" ")[3]} ${tokens[0].split(" ")[4]}"
+                        dataList.add(
+                            SensorData(
+                                timestamp = timestr,
+                                accelX = tokens[1],
+                                accelY = tokens[2],
+                                accelZ = tokens[3],
+                                gyroX = tokens[4],
+                                gyroY = tokens[5],
+                                gyroZ = tokens[6],
+                                activityType = tokens[7],
+                                activitySubtype = tokens[8],
+                                index = tokens[9]
+                            )
                         )
-                    )
+                    }
                 }
             }
             br.close()
@@ -188,6 +210,8 @@ class ReadCsvActivity : AppCompatActivity() {
 
         return dataList
     }
+
+
     class SensorDataAdapter(private val sensorDataList: List<SensorData>) : RecyclerView.Adapter<SensorDataAdapter.ViewHolder>() {
 
         class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
