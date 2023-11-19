@@ -95,6 +95,7 @@ class RecordingActivity : AppCompatActivity() {
 
     // activity mapping
     lateinit var activityEncodings: Array<Array<String>>
+    lateinit var activityEncodingsSubAct: Array<String>
 
     // inference models
     lateinit var tfLiteResAcc: Interpreter
@@ -102,14 +103,23 @@ class RecordingActivity : AppCompatActivity() {
     lateinit var inputShape: IntArray
     var outputIndex = 0
     lateinit var outputShape: IntArray
+
+    lateinit var tfLiteResAccSubActs: Interpreter
+    var inputIndexSubActs = 0
+    lateinit var inputShapeSubActs: IntArray
+    var outputIndexSubActs = 0
+    lateinit var outputShapeSubActs: IntArray
+
     // model paths
     var respeck_accel_model_path = "c2_res_accel_1116_s_26_bn_nonorm.tflite"
-//    var respeck_accel_model_path = "t_c2_res_accel_1017.tflite"
+    var subacts_model_path = "c2_res_accel_11_18_cnn_subactivities_only_guifu.tflite"
+
     lateinit var respeck_both_model_path: String
     lateinit var respeck_thingy_accel_model_path: String
     var activity_type = "-"
     var activity_subtype ="-"
-    var maxIndex =  1
+    var maxIndex =  -1
+    var maxIndexSubAct = -1
 
 
     private val window_size = 25
@@ -156,6 +166,19 @@ class RecordingActivity : AppCompatActivity() {
         }
         Log.d(TAG, "onCreate: activityEncodings = " + activityEncodings.contentDeepToString())
 
+        // read sub activities
+        val jsonFileSubActs = "subactivities_only.json"
+        val jsonStrSubActs = application.assets.open(jsonFileSubActs).bufferedReader().use { it.readText() }
+        val jsonObjSubActs = JSONObject(jsonStrSubActs)
+        val activityLabelsSubActs = jsonObjSubActs.getJSONArray("activity_classes")
+        // read {"activity_classes": ["breathingNormal", "coughing", "hyperventilating", "other"]}
+        activityEncodingsSubAct = Array(activityLabelsSubActs.length()) { "" }
+        for (i in 0 until activityLabelsSubActs.length()) {
+            val activityLabelSubAct = activityLabelsSubActs.getString(i)
+            activityEncodingsSubAct[i] = activityLabelSubAct
+        }
+        Log.d(TAG, "onCreate: activityEncodingsSubAct = " + activityEncodingsSubAct.contentDeepToString())
+
         Log.d(TAG, "onCreate: setting up respeck receiver")
         // register respeck receiver
         // TODO
@@ -167,7 +190,6 @@ class RecordingActivity : AppCompatActivity() {
                 if (action == Constants.ACTION_RESPECK_LIVE_BROADCAST) {
                     // init model if not, on first receive
                     if (!this@RecordingActivity::tfLiteResAcc.isInitialized) {
-//                        print("initializing model")
                         Log.d(TAG, "load model")
                         tfLiteResAcc = Interpreter(loadModelFile(respeck_accel_model_path, context))
                         // Get input and output details
@@ -177,8 +199,17 @@ class RecordingActivity : AppCompatActivity() {
                         outputShape = tfLiteResAcc.getOutputTensor(outputIndex).shape()
                         Log.d(TAG, "inputShape = " + inputShape.contentToString())
                         Log.d(TAG, "outputShape = " + outputShape.contentToString())
-                    } else {
-//                        print("model already initialized")
+                    }
+                    if (!this@RecordingActivity::tfLiteResAccSubActs.isInitialized) {
+                        Log.d(TAG, "load sub activity model")
+                        tfLiteResAccSubActs = Interpreter(loadModelFile(subacts_model_path, context))
+                        // Get input and output details
+                        inputIndexSubActs = 0
+                        inputShapeSubActs = tfLiteResAccSubActs.getInputTensor(inputIndexSubActs).shape()
+                        outputIndexSubActs = 0
+                        outputShapeSubActs = tfLiteResAccSubActs.getOutputTensor(outputIndexSubActs).shape()
+                        Log.d(TAG, "inputShapeSubActs = " + inputShapeSubActs.contentToString())
+                        Log.d(TAG, "outputShapeSubActs = " + outputShapeSubActs.contentToString())
                     }
 
                     val liveData = intent.getSerializableExtra(Constants.RESPECK_LIVE_DATA) as RESpeckLiveData
@@ -202,32 +233,45 @@ class RecordingActivity : AppCompatActivity() {
                         Log.d(TAG, "onReceive: array2D = " + array2D.contentDeepToString())
                         // TODO: see if by using rewind() can we make inputBuffer a field, not to allocate it every time
                         val inputBuffer = ByteBuffer.allocateDirect(4 * 25 * 3)
+                        val inputBufferSubActs = ByteBuffer.allocateDirect(4 * 25 * 3)
                         inputBuffer.order(ByteOrder.nativeOrder())
+                        inputBufferSubActs.order(ByteOrder.nativeOrder())
                         inputBuffer.rewind();
+                        inputBufferSubActs.rewind();
                         // Converting 2D array data into ByteBuffer format
                         for (i in array2D.indices) {
                             for (j in array2D[i].indices) {
                                 inputBuffer.putFloat(array2D[i][j])
+                                inputBufferSubActs.putFloat(array2D[i][j])
                             }
                         }
-                        val bufferStr = inputBuffer.asCharBuffer().toString()
-                        Log.d(TAG, "Buffer: $bufferStr")
+//                        val bufferStr = inputBuffer.asCharBuffer().toString()
+//                        Log.d(TAG, "Buffer: $bufferStr")
                         // Run inference
                         val outputBuffer = ByteBuffer.allocateDirect(4 * 26)
+                        val outputBufferSubActs = ByteBuffer.allocateDirect(4 * 4)
                         outputBuffer.order(ByteOrder.nativeOrder())
+                        outputBufferSubActs.order(ByteOrder.nativeOrder())
                         tfLiteResAcc.run(inputBuffer, outputBuffer)
+                        tfLiteResAccSubActs.run(inputBufferSubActs, outputBufferSubActs)
                         // Converting ByteBuffer output to float array
                         val outputData = FloatArray(outputShape[1])
+                        val outputDataSubActs = FloatArray(outputShapeSubActs[1])
                         outputBuffer.rewind()
+                        outputBufferSubActs.rewind()
                         outputBuffer.asFloatBuffer().get(outputData)
+                        outputBufferSubActs.asFloatBuffer().get(outputDataSubActs)
                         Log.d(TAG, "onCreate: outputData = " + outputData.contentToString())
+                        Log.d(TAG, "onCreate: outputDataSubActs = " + outputDataSubActs.contentToString())
 
                         // Find the index of the maximum value in the outputData
                         maxIndex = outputData.indices.maxByOrNull { outputData[it] } ?: -1
+                        maxIndexSubAct = outputDataSubActs.indices.maxByOrNull { outputDataSubActs[it] } ?: -1
                         Log.d(TAG, "onCreate: maxIndex = $maxIndex")
+                        Log.d(TAG, "onCreate: maxIndexSubAct = $maxIndexSubAct")
                         // get activity type and subtype from maxIndex
                         activity_type = activityEncodings[maxIndex][0]
-                        activity_subtype = activityEncodings[maxIndex][1]
+                        activity_subtype = activityEncodingsSubAct[maxIndexSubAct]
                         // concat them as one string
                         val outputStr = "Predicted class: $activity_type - $activity_subtype";
                         Log.d(TAG, "outputStr: $outputStr")
@@ -235,9 +279,7 @@ class RecordingActivity : AppCompatActivity() {
                     }
                     time += 1
                     updateGraph("respeck", liveData.accelX, liveData.accelY, liveData.accelZ)
-
                 }
-
             }
         }
 
