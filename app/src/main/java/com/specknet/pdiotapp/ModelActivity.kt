@@ -40,7 +40,7 @@ class ModelActivity : AppCompatActivity() {
     var TAG = "ModelActivity"
 
     // TODO 2.1: defines the model to be used
-    var modelPath = "t_c2_res_accel_1017.tflite"
+    var modelPath = "c2_res_accel_1116_s_26_bn_nonorm.tflite"
 
 //    // TODO 2.2: defining the minimum threshold
 //    var probabilityThreshold: Float = 0.3f
@@ -216,7 +216,7 @@ class ModelActivity : AppCompatActivity() {
 
 
 
-class MyTFLiteInference(context: Context, modelFilePath: String = "c2_res_accel_1104.tflite") {
+class MyTFLiteInference(context: Context, modelFilePath: String = "c2_res_accel_1116_s_26_bn_nonorm.tflite") {
 
     private var interpreter: Interpreter
 
