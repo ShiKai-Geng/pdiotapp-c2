@@ -20,7 +20,8 @@
             android:id="@+id/staticTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Statics summary" />
+            android:gravity="center"
+            android:text="Statics summary: most frequent of \n    activity, sub-activity and their pair" />
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
