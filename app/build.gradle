@@ -6,7 +6,7 @@ android {
     compileSdkVersion 31
 
     defaultConfig {
-        applicationId "com.specknet.pdiotapp"
+        applicationId "com.specknet.pdiotapp_c2"
         minSdkVersion 23
         targetSdkVersion 31
         versionCode 1
