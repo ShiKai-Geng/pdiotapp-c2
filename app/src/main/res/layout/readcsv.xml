@@ -32,7 +32,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:padding="4dp"
-                tools:ignore="Suspicious0dp" />
+                android:layout_weight="1" />
 
             <!-- Add TextViews for accelX, accelY, accelZ, gyroX, gyroY, gyroZ, activityType, activitySubtype, index -->
             <TextView
@@ -40,14 +40,15 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:padding="4dp"
-                tools:ignore="Suspicious0dp" />
+                android:layout_weight="1" />
 
             <TextView
                 android:id="@+id/totalTextView"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:padding="4dp"
-                tools:ignore="Suspicious0dp" />
+               />
 
         </LinearLayout>
 
