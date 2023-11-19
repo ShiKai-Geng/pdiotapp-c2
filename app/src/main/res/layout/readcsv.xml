@@ -15,6 +15,31 @@
             android:id="@+id/calendarView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
+        <TextView
+            android:id="@+id/staticTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Statics summary" />
+
+        <TextView
+            android:id="@+id/mainTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:padding="4dp" />
+
+        <!-- Add TextViews for accelX, accelY, accelZ, gyroX, gyroY, gyroZ, activityType, activitySubtype, index -->
+        <TextView
+            android:id="@+id/subTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:padding="4dp" />
+
+        <TextView
+            android:id="@+id/totalTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:padding="4dp" />
+
 
 <!--        <ListView-->
 <!--            android:id="@+id/dataListView"-->
@@ -30,7 +55,7 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent" />
     </LinearLayout>
 
 
