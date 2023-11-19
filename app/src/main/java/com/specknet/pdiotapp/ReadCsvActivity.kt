@@ -8,16 +8,24 @@ import androidx.appcompat.app.AppCompatActivity
 import java.io.File
 import android.app.AlertDialog
 import android.content.Context
+import android.os.Build
 import android.view.View
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.LinearLayoutManager
 import java.io.BufferedReader
 import java.io.FileReader
 import java.io.IOException
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Date
+import java.util.TimeZone
 
 class ReadCsvActivity : AppCompatActivity() {
 
@@ -31,6 +39,7 @@ class ReadCsvActivity : AppCompatActivity() {
 
     val TAG = "ReadCsvActivity"
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -45,10 +54,12 @@ class ReadCsvActivity : AppCompatActivity() {
         recyclerView = findViewById(R.id.recyclerView)
         var Csv = mutableListOf<SensorData>()
         recyclerView.layoutManager = LinearLayoutManager(this)
+        Log.d("what", "read csv activity")
 
         calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
 //            val selectedDate = "$dayOfMonth/${month + 1}/$year"
             val selectedDate = "$dayOfMonth-${month + 1}-$year"
+            Log.d(TAG, "selectedDate = $selectedDate")
 //            displayDataForDate(selectedDate)
             Log.d(TAG, "date = $selectedDate")
             val dataList = readCsvData(selectedDate)
@@ -70,6 +81,32 @@ class ReadCsvActivity : AppCompatActivity() {
             recyclerView.adapter = fileAdapter
             //displayDataForDate(selectedDate)
         }
+        // select today automatically
+        val selectedDate = calendarView.date.toString()
+        // Convert the timestamp to Instant
+        val instant = Instant.ofEpochMilli(selectedDate.toLong())
+        // Format the Instant using DateTimeFormatter
+        val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+        val formattedDate = formatter.format(instant.atZone(ZoneId.systemDefault()))
+//        val formatedDate = Date(selectedDate).toString()
+        Log.d(TAG, "mimiced selectedDate = $formattedDate")
+        val dataList = readCsvData(formattedDate)
+        if (dataList.isEmpty()) {
+            showNoDataAlert(this)
+        }
+
+        Log.d(TAG, "dataList = $dataList")
+        fileAdapter = FileAdapter(dataList) { file ->
+            Csv = readCsvFile(file.absolutePath)
+            val sub_csv = Csv[0]
+            Log.d(TAG, "Csv = $sub_csv")
+            val sensorDataList = Csv
+            sensorDataAdapter = SensorDataAdapter(sensorDataList)
+            recyclerView.adapter = sensorDataAdapter
+            // 处理文件点击事件，例如打开文件
+        }
+
+        recyclerView.adapter = fileAdapter
     }
 
 //    private fun displayDataForDate(date: String) {

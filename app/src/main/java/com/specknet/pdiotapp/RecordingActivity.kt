@@ -758,7 +758,7 @@ class RecordingActivity : AppCompatActivity() {
 
     private fun getInputs() {
 
-        universalSubjectId = univSubjectIdInput.text.toString().toLowerCase().trim()
+        universalSubjectId = univSubjectIdInput.text.toString().trim()
         activityType = "activity"
         activitySubtype = "activity_subtype"
         sensorType = sensorTypeSpinner.selectedItem.toString()
