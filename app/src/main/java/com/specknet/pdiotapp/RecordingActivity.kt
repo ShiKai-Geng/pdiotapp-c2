@@ -23,9 +23,7 @@ import com.specknet.pdiotapp.utils.Constants
 import com.specknet.pdiotapp.utils.CountUpTimer
 import com.specknet.pdiotapp.utils.RESpeckLiveData
 import com.specknet.pdiotapp.utils.ThingyLiveData
-import kotlinx.android.synthetic.main.activity_model.output
 import org.json.JSONObject
-import org.tensorflow.lite.DataType
 import org.tensorflow.lite.Interpreter
 import java.io.*
 import java.nio.ByteBuffer
@@ -38,6 +36,7 @@ import kotlin.collections.ArrayList
 import kotlin.math.exp
 import kotlin.math.pow
 import kotlin.math.sqrt
+import kotlin.system.measureNanoTime
 
 class RecordingActivity : AppCompatActivity() {
     private val TAG = "RecordingActivity"
@@ -124,6 +123,14 @@ class RecordingActivity : AppCompatActivity() {
 
     lateinit var username: String
 
+    lateinit var stationaryActivities: Array<String>
+    lateinit var movingActivities: Array<String>
+
+    var time_main_model_init = 0L
+    var time_main_inference = 0L
+    var time_subact_model_init = 0L
+    var time_subact_inference = 0L
+
 
     private val window_size = 25
 
@@ -162,6 +169,9 @@ class RecordingActivity : AppCompatActivity() {
         setupCharts()
 
         setupInputs()
+
+        stationaryActivities = arrayOf<String>("sitting/standing", "lyingBack", "lyingLeft", "lyingRight", "lyingStomach")
+        movingActivities = arrayOf<String>("ascending", "descending", "miscMovement", "normalWalking", "running", "shuffleWalking")
 
         // read json file
         val jsonFile = "activity_classes_1115_26.json"
@@ -204,7 +214,15 @@ class RecordingActivity : AppCompatActivity() {
                     // init model if not, on first receive
                     if (!this@RecordingActivity::tfLiteResAcc.isInitialized) {
                         Log.d(TAG, "load model")
-                        tfLiteResAcc = Interpreter(loadModelFile(respeck_accel_model_path, context))
+                        // print out CPU cycle
+//                        val runtime = Runtime.getRuntime()
+//                        timer_mainModelInitBegin = runtime.totalMemory() - runtime.freeMemory()
+
+                        time_main_model_init = measureNanoTime {
+                            tfLiteResAcc =
+                                Interpreter(loadModelFile(respeck_accel_model_path, context))
+                        }
+//                        timer_mainModelInitEnd = runtime.totalMemory() - runtime.freeMemory()
                         // Get input and output details
                         inputIndex = 0
                         inputShape = tfLiteResAcc.getInputTensor(inputIndex).shape()
@@ -215,7 +233,10 @@ class RecordingActivity : AppCompatActivity() {
                     }
                     if (!this@RecordingActivity::tfLiteResAccSubActs.isInitialized) {
                         Log.d(TAG, "load sub activity model")
-                        tfLiteResAccSubActs = Interpreter(loadModelFile(subacts_model_path, context))
+                        time_subact_model_init = measureNanoTime {
+                            tfLiteResAccSubActs =
+                                Interpreter(loadModelFile(subacts_model_path, context))
+                        }
                         // Get input and output details
                         inputIndexSubActs = 0
                         inputShapeSubActs = tfLiteResAccSubActs.getInputTensor(inputIndexSubActs).shape()
@@ -227,6 +248,13 @@ class RecordingActivity : AppCompatActivity() {
 
                     val liveData = intent.getSerializableExtra(Constants.RESPECK_LIVE_DATA) as RESpeckLiveData
                     Log.d("Live", "onReceive: liveData = " + liveData)
+
+                    val phoneTimestamp = liveData.phoneTimestamp
+                    val respeckTimestamp = liveData.respeckTimestamp
+                    val currentTime = System.currentTimeMillis()
+                    Log.d(TAG, "onReceive: phoneTimestamp = $phoneTimestamp")
+                    Log.d(TAG, "onReceive: respeckTimestamp = $respeckTimestamp")
+                    Log.d(TAG, "onReceive: currentTime = $currentTime")
 
                     updateRespeckData(liveData)
 
@@ -265,8 +293,12 @@ class RecordingActivity : AppCompatActivity() {
                         val outputBufferSubActs = ByteBuffer.allocateDirect(4 * 4)
                         outputBuffer.order(ByteOrder.nativeOrder())
                         outputBufferSubActs.order(ByteOrder.nativeOrder())
-                        tfLiteResAcc.run(inputBuffer, outputBuffer)
-                        tfLiteResAccSubActs.run(inputBufferSubActs, outputBufferSubActs)
+                        time_main_inference = measureNanoTime {
+                            tfLiteResAcc.run(inputBuffer, outputBuffer)
+                        }
+                        time_subact_inference = measureNanoTime {
+                            tfLiteResAccSubActs.run(inputBufferSubActs, outputBufferSubActs)
+                        }
                         // Converting ByteBuffer output to float array
                         val outputData = FloatArray(outputShape[1])
                         val outputDataSubActs = FloatArray(outputShapeSubActs[1])
@@ -286,10 +318,23 @@ class RecordingActivity : AppCompatActivity() {
                         activity_type = activityEncodings[maxIndex][0]
                         activity_subtype = activityEncodings[maxIndex][1]
                         activity_subtype_SubAct = activityEncodingsSubAct[maxIndexSubAct]
+                        var outputStr = "";
+                        if (activity_type in stationaryActivities) {
+                            outputStr = "$activity_type / $activity_subtype_SubAct"
+                        } else if (activity_type in movingActivities) {
+                            outputStr = activity_type
+                        } else {
+                            outputStr = "Unrecognized activity"
+                        }
                         // concat them as one string  // TODO: remove this comparison
-                        val outputStr = "$activity_type / $activity_subtype_SubAct"
+//                        outputStr = "$activity_type / $activity_subtype_SubAct"
                         Log.d(TAG, "outputStr: $outputStr")
                         runOnUiThread { textView.text = outputStr }
+                        // print out timer stats
+                        Log.d(TAG, "onCreate: time_main_model_init = $time_main_model_init")
+                        Log.d(TAG, "onCreate: time_main_inference = $time_main_inference")
+                        Log.d(TAG, "onCreate: time_subact_model_init = $time_subact_model_init")
+                        Log.d(TAG, "onCreate: time_subact_inference = $time_subact_inference")
                     }
                     time += 1
                     updateGraph("respeck", liveData.accelX, liveData.accelY, liveData.accelZ)
