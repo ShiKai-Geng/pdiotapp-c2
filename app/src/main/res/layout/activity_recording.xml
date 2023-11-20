@@ -137,6 +137,7 @@
                 android:layout_height="wrap_content"
                 android:hint="user"
                 android:singleLine="true"
+                android:paddingStart="10dp"
                 android:id="@+id/universal_subject_id_input"
                 />
         </LinearLayout>
