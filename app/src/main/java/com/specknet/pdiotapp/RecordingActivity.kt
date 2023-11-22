@@ -499,25 +499,7 @@ class RecordingActivity : AppCompatActivity() {
             }
         }
 
-//        activityTypeSpinner = findViewById(R.id.activity_type_spinner)
-//        ArrayAdapter.createFromResource(
-//            this,
-//            R.array.activity_type_array,
-//            android.R.layout.simple_spinner_item
-//        ).also { adapter ->
-//            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-//            activityTypeSpinner.adapter = adapter
-//        }
-//
-//        activitySubtypeSpinner = findViewById(R.id.activity_subtype_spinner)
-//        ArrayAdapter.createFromResource(
-//            this,
-//            R.array.activity_subtype_array,
-//            android.R.layout.simple_spinner_item
-//        ).also { adapter ->
-//            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-//            activitySubtypeSpinner.adapter = adapter
-//        }
+
     }
     fun setupCharts() {
         respeckChart = findViewById(R.id.respeck_chart)
@@ -632,8 +614,7 @@ class RecordingActivity : AppCompatActivity() {
             enableView(stopRecordingButton)
 
             disableView(sensorTypeSpinner)
-//            disableView(activityTypeSpinner)
-//            disableView(activitySubtypeSpinner)
+
             disableView(univSubjectIdInput)
             disableView(notesInput)
 
@@ -648,8 +629,7 @@ class RecordingActivity : AppCompatActivity() {
             disableView(stopRecordingButton)
 
             enableView(sensorTypeSpinner)
-//            enableView(activityTypeSpinner)
-//            enableView(activitySubtypeSpinner)
+
             enableView(univSubjectIdInput)
             enableView(notesInput)
 
@@ -665,8 +645,7 @@ class RecordingActivity : AppCompatActivity() {
             disableView(stopRecordingButton)
 
             enableView(sensorTypeSpinner)
-//            enableView(activityTypeSpinner)
-//            enableView(activitySubtypeSpinner)
+
             enableView(univSubjectIdInput)
             enableView(notesInput)
 
@@ -723,7 +702,7 @@ class RecordingActivity : AppCompatActivity() {
         val currentTime = System.currentTimeMillis()
         var formattedDate = ""
         try {
-            formattedDate = SimpleDateFormat("dd-MM-yyyy_HH-mm-ss", Locale.UK).format(Date())
+//            formattedDate = SimpleDateFormat("dd-MM-yyyy_HH-mm-ss", Locale.UK).format(Date())
             Log.i(TAG, "saveRecording: formattedDate = " + formattedDate)
         } catch (e: Exception) {
             Log.i(TAG, "saveRecording: error = ${e.toString()}")
