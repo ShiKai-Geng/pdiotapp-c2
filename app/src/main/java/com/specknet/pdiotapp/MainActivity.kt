@@ -15,6 +15,7 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
+import com.google.android.gms.nearby.Nearby
 import com.google.android.material.snackbar.Snackbar
 import com.specknet.pdiotapp.bluetooth.BluetoothSpeckService
 import com.specknet.pdiotapp.bluetooth.ConnectingActivity
@@ -40,6 +41,7 @@ class MainActivity : AppCompatActivity() {
     var cameraPermissionGranted = false
     var readStoragePermissionGranted = false
     var writeStoragePermissionGranted = false
+    var NearbyPermissionGranted = false
 
     // broadcast receiver
     val filter = IntentFilter()
@@ -120,6 +122,14 @@ class MainActivity : AppCompatActivity() {
 
     fun setupPermissions() {
         // request permissions
+        if (ActivityCompat.checkSelfPermission(applicationContext,
+                Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+            permissionsForRequest.add(Manifest.permission.BLUETOOTH_SCAN)
+            permissionsForRequest.add(Manifest.permission.BLUETOOTH_CONNECT)
+        }
+        else {
+            NearbyPermissionGranted = true
+        }
 
         // location permission
         Log.i("Permissions", "Location permission = " + locationPermissionGranted)

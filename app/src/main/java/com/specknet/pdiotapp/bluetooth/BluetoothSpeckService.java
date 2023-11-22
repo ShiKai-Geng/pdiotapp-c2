@@ -76,6 +76,8 @@ public class BluetoothSpeckService extends Service {
     private BroadcastReceiver respeckPausedReceiver;
     private BroadcastReceiver respeckIMUChangeReceiver;
 
+    private BroadcastReceiver broadcastReceiver;
+
     private boolean mIsRESpeckPaused;
     private boolean respeckUseIMUCharacteristic = true;
 
@@ -250,12 +252,19 @@ public class BluetoothSpeckService extends Service {
         // Provide a method for forcefully scanning for bluetooth devices.
         // Useful when Bluetooth or GPS are dropped.
         // TODO: test with other connected devices
-        registerReceiver(new BroadcastReceiver() {
+        broadcastReceiver = new BroadcastReceiver() {
             public void onReceive(Context context, Intent intent) {
                 Log.i(TAG, "Received request to scan for Bluetooth devices...");
                 startServiceAndBluetoothScanning();
             }
-        }, SpeckIntentFilters.INSTANCE.getBluetoothServiceScanForDevicesIntentFilter());
+        };
+        registerReceiver(broadcastReceiver, SpeckIntentFilters.INSTANCE.getBluetoothServiceScanForDevicesIntentFilter());
+//        registerReceiver(new BroadcastReceiver() {
+//            public void onReceive(Context context, Intent intent) {
+//                Log.i(TAG, "Received request to scan for Bluetooth devices...");
+//                startServiceAndBluetoothScanning();
+//            }
+//        }, SpeckIntentFilters.INSTANCE.getBluetoothServiceScanForDevicesIntentFilter());
 
     }
 
@@ -728,6 +737,10 @@ public class BluetoothSpeckService extends Service {
 
         if (respeckIMUChangeReceiver != null) {
             unregisterReceiver(respeckIMUChangeReceiver);
+        }
+
+        if (broadcastReceiver != null) {
+            unregisterReceiver(broadcastReceiver);
         }
 
     }

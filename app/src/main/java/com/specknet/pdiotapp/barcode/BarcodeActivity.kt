@@ -25,6 +25,7 @@ import java.lang.Exception
 class BarcodeActivity : AppCompatActivity() {
 
     private val requestCodeCameraPermission = 1001
+    private val requestCodeLocationPermission = 1002
     private lateinit var cameraSource: CameraSource
     private lateinit var detector: BarcodeDetector
 
@@ -56,6 +57,10 @@ class BarcodeActivity : AppCompatActivity() {
         ActivityCompat.requestPermissions(
             this@BarcodeActivity,
             arrayOf(Manifest.permission.CAMERA),
+            requestCodeCameraPermission)
+        ActivityCompat.requestPermissions(
+            this@BarcodeActivity,
+            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
             requestCodeCameraPermission)
     }
 
