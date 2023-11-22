@@ -189,7 +189,8 @@ class ConnectingActivity : AppCompatActivity() {
         Log.d(TAG, "setupForegroundDispatch: here ")
         val intent = Intent(activity.applicationContext, activity.javaClass)
         intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-        val pendingIntent = PendingIntent.getActivity(activity.applicationContext, 0, intent, 0)
+        // intent.flags = Intent.FLAG_IMMUTABLE
+        val pendingIntent = PendingIntent.getActivity(activity.applicationContext, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
         val filters = arrayOfNulls<IntentFilter>(2)
         val techList = arrayOf(
