@@ -40,7 +40,7 @@ import kotlin.system.measureNanoTime
 
 class RecordingActivity : AppCompatActivity() {
     private val TAG = "RecordingActivity"
-    lateinit var sensorTypeSpinner: Spinner
+//    lateinit var sensorTypeSpinner: Spinner
 //    lateinit var activityTypeSpinner: Spinner
 //    lateinit var activitySubtypeSpinner: Spinner
     lateinit var startRecordingButton: Button
@@ -163,7 +163,7 @@ class RecordingActivity : AppCompatActivity() {
 
 //        setupViews()
 
-        setupSpinners()
+//        setupSpinners()
 
         setupButtons()
         setupCharts()
@@ -475,32 +475,32 @@ class RecordingActivity : AppCompatActivity() {
         notesInput = findViewById(R.id.notes_input)
     }
 
-    private fun setupSpinners() {
-        Log.d(TAG, "setupSpinners: here")
-        sensorTypeSpinner = findViewById(R.id.sensor_type_spinner)
+//    private fun setupSpinners() {
+//        Log.d(TAG, "setupSpinners: here")
+////        sensorTypeSpinner = findViewById(R.id.sensor_type_spinner)
+//
+//        ArrayAdapter.createFromResource(
+//            this,
+//            R.array.sensor_type_array,
+//            android.R.layout.simple_spinner_item
+//        ).also { adapter ->
+//            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+//            sensorTypeSpinner.adapter = adapter
+//        }
+//
+//        sensorTypeSpinner.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
+//            override fun onItemSelected(parent: AdapterView<*>, viwq: View, position: Int, id: Long) {
+//                val selectedItem = parent.getItemAtPosition(position).toString()
+//                sensorType = selectedItem
+//            }
+//
+//            override fun onNothingSelected(p0: AdapterView<*>?) {
+//                sensorType = "Respeck"
+//            }
+//        }
 
-        ArrayAdapter.createFromResource(
-            this,
-            R.array.sensor_type_array,
-            android.R.layout.simple_spinner_item
-        ).also { adapter ->
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            sensorTypeSpinner.adapter = adapter
-        }
 
-        sensorTypeSpinner.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>, viwq: View, position: Int, id: Long) {
-                val selectedItem = parent.getItemAtPosition(position).toString()
-                sensorType = selectedItem
-            }
-
-            override fun onNothingSelected(p0: AdapterView<*>?) {
-                sensorType = "Respeck"
-            }
-        }
-
-
-    }
+//    }
     fun setupCharts() {
         respeckChart = findViewById(R.id.respeck_chart)
 
@@ -613,7 +613,7 @@ class RecordingActivity : AppCompatActivity() {
             enableView(cancelRecordingButton)
             enableView(stopRecordingButton)
 
-            disableView(sensorTypeSpinner)
+//            disableView(sensorTypeSpinner)
 
             disableView(univSubjectIdInput)
             disableView(notesInput)
@@ -628,7 +628,7 @@ class RecordingActivity : AppCompatActivity() {
             disableView(cancelRecordingButton)
             disableView(stopRecordingButton)
 
-            enableView(sensorTypeSpinner)
+//            enableView(sensorTypeSpinner)
 
             enableView(univSubjectIdInput)
             enableView(notesInput)
@@ -644,7 +644,7 @@ class RecordingActivity : AppCompatActivity() {
             disableView(cancelRecordingButton)
             disableView(stopRecordingButton)
 
-            enableView(sensorTypeSpinner)
+//            enableView(sensorTypeSpinner)
 
             enableView(univSubjectIdInput)
             enableView(notesInput)
@@ -785,7 +785,7 @@ class RecordingActivity : AppCompatActivity() {
         universalSubjectId = univSubjectIdInput.text.toString().trim()
         activityType = "activity"
         activitySubtype = "activity_subtype"
-        sensorType = sensorTypeSpinner.selectedItem.toString()
+//        sensorType = sensorTypeSpinner.selectedItem.toString()
         notes = notesInput.text.toString().trim()
 
     }

@@ -20,6 +20,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="100px"
             android:text="I want to"
+            android:textSize="20sp"
             app:layout_constraintBottom_toTopOf="@+id/record_button"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

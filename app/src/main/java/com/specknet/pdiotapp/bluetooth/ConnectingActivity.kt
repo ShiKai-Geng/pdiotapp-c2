@@ -99,10 +99,10 @@ class ConnectingActivity : AppCompatActivity() {
             ).apply()
             sharedPreferences.edit().putInt(Constants.RESPECK_VERSION, 6).apply()
 
-            sharedPreferences.edit().putString(
-                Constants.THINGY_MAC_ADDRESS_PREF,
-                thingyID.text.toString()
-            ).apply()
+//            sharedPreferences.edit().putString(
+//                Constants.THINGY_MAC_ADDRESS_PREF,
+//                thingyID.text.toString()
+//            ).apply()
 
             startSpeckService()
 
