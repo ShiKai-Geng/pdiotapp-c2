@@ -9,6 +9,9 @@ import android.nfc.Tag
 import android.nfc.tech.Ndef
 import android.nfc.tech.NfcF
 import android.os.Bundle
+import android.os.Handler
+import android.os.HandlerThread
+import android.os.Looper
 import android.text.Editable
 import android.text.InputFilter
 import android.text.InputFilter.AllCaps
@@ -17,10 +20,18 @@ import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
+import android.content.BroadcastReceiver
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.specknet.pdiotapp.R
 import com.specknet.pdiotapp.barcode.BarcodeActivity
 import com.specknet.pdiotapp.utils.Constants
+import com.specknet.pdiotapp.utils.RESpeckLiveData
 import com.specknet.pdiotapp.utils.Utils
 import kotlinx.android.synthetic.main.activity_connecting.*
 import java.util.*
@@ -35,6 +46,16 @@ class ConnectingActivity : AppCompatActivity() {
     private lateinit var respeckID: EditText
     private lateinit var connectSensorsButton: Button
     private lateinit var restartConnectionButton: Button
+    lateinit var dataSet_res_accel_x: LineDataSet
+    lateinit var dataSet_res_accel_y: LineDataSet
+    lateinit var dataSet_res_accel_z: LineDataSet
+    lateinit var allRespeckData: LineData
+    lateinit var respeckChart: LineChart
+    lateinit var looperRespeck: Looper
+    lateinit var looperThingy: Looper
+
+    val filterTestRespeck = IntentFilter(Constants.ACTION_RESPECK_LIVE_BROADCAST)
+    var time = 0f
 //    private lateinit var disconnectRespeckButton: Button
 
     // Thingy
@@ -44,6 +65,7 @@ class ConnectingActivity : AppCompatActivity() {
 //    private lateinit var disconnectThingyButton: Button
 
     lateinit var sharedPreferences: SharedPreferences
+    lateinit var respeckLiveUpdateReceiver: BroadcastReceiver
 
     var nfcAdapter: NfcAdapter? = null
     val MIME_TEXT_PLAIN = "application/vnd.bluetooth.le.oob"
@@ -51,15 +73,16 @@ class ConnectingActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_connecting)
 
+        setContentView(R.layout.activity_connecting)
+        setupCharts()
         // scan respeck
         scanRespeckButton = findViewById(R.id.scan_respeck)
         respeckID = findViewById(R.id.respeck_code)
         connectSensorsButton = findViewById(R.id.connect_sensors_button)
         restartConnectionButton = findViewById(R.id.restart_service_button)
 
-        thingyID = findViewById(R.id.thingy_code)
+//        thingyID = findViewById(R.id.thingy_code)
 
         scanRespeckButton.setOnClickListener {
             val barcodeScanner = Intent(this, BarcodeActivity::class.java)
@@ -106,16 +129,16 @@ class ConnectingActivity : AppCompatActivity() {
             connectSensorsButton.isClickable = false
         }
 
-        if (sharedPreferences.contains(Constants.THINGY_MAC_ADDRESS_PREF)) {
-            Log.i("sharedpref", "Already saw a thingy ID")
-
-            thingy_code.setText(
-                sharedPreferences.getString(
-                    Constants.THINGY_MAC_ADDRESS_PREF,
-                    ""
-                )
-            )
-        }
+//        if (sharedPreferences.contains(Constants.THINGY_MAC_ADDRESS_PREF)) {
+//            Log.i("sharedpref", "Already saw a thingy ID")
+//
+////            thingy_code.setText(
+////                sharedPreferences.getString(
+////                    Constants.THINGY_MAC_ADDRESS_PREF,
+////                    ""
+////                )
+////            )
+//        }
 
         respeckID.addTextChangedListener(object : TextWatcher {
             override fun onTextChanged(cs: CharSequence, start: Int, before: Int, count: Int) {
@@ -139,7 +162,7 @@ class ConnectingActivity : AppCompatActivity() {
 
         respeckID.filters = arrayOf<InputFilter>(AllCaps())
 
-        thingyID.filters = arrayOf<InputFilter>(AllCaps())
+//        thingyID.filters = arrayOf<InputFilter>(AllCaps())
         val nfcManager = getSystemService(Context.NFC_SERVICE) as NfcManager
         nfcAdapter = nfcManager.defaultAdapter
 
@@ -150,6 +173,35 @@ class ConnectingActivity : AppCompatActivity() {
         } else {
             Toast.makeText(this, "NFC Disabled", Toast.LENGTH_LONG).show()
         }
+        respeckLiveUpdateReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+
+                Log.i("thread", "I am running on thread = " + Thread.currentThread().name)
+
+                val action = intent.action
+
+                if (action == Constants.ACTION_RESPECK_LIVE_BROADCAST) {
+
+                    val liveData =
+                        intent.getSerializableExtra(Constants.RESPECK_LIVE_DATA) as RESpeckLiveData
+                    Log.d("Live", "onReceive: liveData = " + liveData)
+
+                    // get all relevant intent contents
+                    val x = liveData.accelX
+                    val y = liveData.accelY
+                    val z = liveData.accelZ
+
+                    time += 1
+                    updateGraph("respeck", x, y, z)
+
+                }
+            }
+        }
+        val handlerThreadRespeck = HandlerThread("bgThreadRespeckLive")
+        handlerThreadRespeck.start()
+        looperRespeck = handlerThreadRespeck.looper
+        val handlerRespeck = Handler(looperRespeck)
+        this.registerReceiver(respeckLiveUpdateReceiver, filterTestRespeck, null, handlerRespeck)
 
 
     }
@@ -304,7 +356,7 @@ class ConnectingActivity : AppCompatActivity() {
 //
                 Toast.makeText(this, "NFC scanned ($ble_addr)", Toast.LENGTH_LONG).show()
 
-                thingyID.setText(ble_addr)
+//                thingyID.setText(ble_addr)
 
             }
 
@@ -372,6 +424,77 @@ class ConnectingActivity : AppCompatActivity() {
 
         }
 
+    }
+    fun setupCharts() {
+        respeckChart = findViewById(R.id.respeck_chart)
+
+        // Respeck
+
+        time = 0f
+        val entries_res_accel_x = ArrayList<Entry>()
+        val entries_res_accel_y = ArrayList<Entry>()
+        val entries_res_accel_z = ArrayList<Entry>()
+
+        dataSet_res_accel_x = LineDataSet(entries_res_accel_x, "Accel X")
+        dataSet_res_accel_y = LineDataSet(entries_res_accel_y, "Accel Y")
+        dataSet_res_accel_z = LineDataSet(entries_res_accel_z, "Accel Z")
+
+        dataSet_res_accel_x.setDrawCircles(false)
+        dataSet_res_accel_y.setDrawCircles(false)
+        dataSet_res_accel_z.setDrawCircles(false)
+
+        dataSet_res_accel_x.setColor(
+            ContextCompat.getColor(
+                this,
+                R.color.red
+            )
+        )
+        dataSet_res_accel_y.setColor(
+            ContextCompat.getColor(
+                this,
+                R.color.green
+            )
+        )
+        dataSet_res_accel_z.setColor(
+            ContextCompat.getColor(
+                this,
+                R.color.blue
+            )
+        )
+
+        val dataSetsRes = ArrayList<ILineDataSet>()
+        dataSetsRes.add(dataSet_res_accel_x)
+        dataSetsRes.add(dataSet_res_accel_y)
+        dataSetsRes.add(dataSet_res_accel_z)
+
+        allRespeckData = LineData(dataSetsRes)
+        respeckChart.data = allRespeckData
+        respeckChart.invalidate()
+
+        // Thingy
+
+    }
+    fun updateGraph(graph: String, x: Float, y: Float, z: Float) {
+        // take the first element from the queue
+        // and update the graph with it
+        if (graph == "respeck") {
+            dataSet_res_accel_x.addEntry(Entry(time, x))
+            dataSet_res_accel_y.addEntry(Entry(time, y))
+            dataSet_res_accel_z.addEntry(Entry(time, z))
+
+            runOnUiThread {
+                allRespeckData.notifyDataChanged()
+                respeckChart.notifyDataSetChanged()
+                respeckChart.invalidate()
+                respeckChart.setVisibleXRangeMaximum(150f)
+                respeckChart.moveViewToX(respeckChart.lowestVisibleX + 40)
+            }
+        }
+    }
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(respeckLiveUpdateReceiver)
+        looperRespeck.quit()
     }
 
 }

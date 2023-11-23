@@ -702,7 +702,7 @@ class RecordingActivity : AppCompatActivity() {
         val currentTime = System.currentTimeMillis()
         var formattedDate = ""
         try {
-//            formattedDate = SimpleDateFormat("dd-MM-yyyy_HH-mm-ss", Locale.UK).format(Date())
+            formattedDate = SimpleDateFormat("dd-MM-yyyy_HH-mm-ss", Locale.UK).format(Date())
             Log.i(TAG, "saveRecording: formattedDate = " + formattedDate)
         } catch (e: Exception) {
             Log.i(TAG, "saveRecording: error = ${e.toString()}")

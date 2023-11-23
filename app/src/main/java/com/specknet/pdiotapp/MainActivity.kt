@@ -77,7 +77,7 @@ class MainActivity : AppCompatActivity() {
         welcomeTextView.text = "Welcome, $username!"
 
 
-        liveProcessingButton = findViewById(R.id.live_button)
+//        liveProcessingButton = findViewById(R.id.live_button)
         pairingButton = findViewById(R.id.ble_button)
         recordButton = findViewById(R.id.record_button)
         modelButton = findViewById(R.id.ml_button)
@@ -97,10 +97,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun setupClickListeners() {
-        liveProcessingButton.setOnClickListener {
-            val intent = Intent(this, LiveDataActivity::class.java)
-            startActivity(intent)
-        }
+//        liveProcessingButton.setOnClickListener {
+//            val intent = Intent(this, LiveDataActivity::class.java)
+//            startActivity(intent)
+//        }
 
         pairingButton.setOnClickListener {
             val intent = Intent(this, ConnectingActivity::class.java)
